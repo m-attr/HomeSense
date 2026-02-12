@@ -36,14 +36,12 @@ class _RealTimeChartState extends State<RealTimeChart> {
 
       final double chartH = (totalH - (outerPadding * 2) - innerVPad * 2 - headerH - labelH - spacing * 2).clamp(40.0, 1000.0);
 
-      // choose data/labels by period
       final List<double> data = (_period == ChartPeriod.week) ? _weekData : (_period == ChartPeriod.month ? _monthData : _yearData);
       final List<String> labels = (_period == ChartPeriod.week) ? _weekLabels : (_period == ChartPeriod.month ? _monthLabels : _yearLabels);
 
       return Padding(
         padding: const EdgeInsets.all(outerPadding),
         child: Container(
-          // Make the background up to and including the chart the green universal hue
           decoration: const BoxDecoration(color: Color(0xFF1EAA83)),
           padding: const EdgeInsets.symmetric(vertical: innerVPad, horizontal: 12),
           child: SizedBox(
@@ -51,7 +49,6 @@ class _RealTimeChartState extends State<RealTimeChart> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Header row: title + period dropdown
                 SizedBox(
                   height: headerH,
                   child: Row(
@@ -63,9 +60,6 @@ class _RealTimeChartState extends State<RealTimeChart> {
                       DropdownButton<ChartPeriod>(
                         value: _period,
                         underline: const SizedBox.shrink(),
-                        // The popup list remains white for legibility, but make
-                        // the selected button text and icon white so it is
-                        // visible on the green header background.
                         dropdownColor: Colors.white,
                         style: const TextStyle(color: Colors.white),
                         iconEnabledColor: Colors.white,
@@ -113,9 +107,6 @@ class _RealTimeChartState extends State<RealTimeChart> {
   }
 }
 
-/// Painter that draws a cubic-smoothed curve, fills the area beneath it,
-/// and marks the latest point with a dot. Uses a darker green for the line
-/// and a translucent lighter fill.
 class _CubicLineChartPainter extends CustomPainter {
   final List<double> data;
 
@@ -134,7 +125,6 @@ class _CubicLineChartPainter extends CustomPainter {
     final double maxVal = data.reduce((a, b) => a > b ? a : b);
     final double range = (maxVal - minVal) == 0 ? 1.0 : (maxVal - minVal);
 
-    // Map data to points
     final points = <Offset>[];
     for (int i = 0; i < data.length; i++) {
       final dx = left + (chartW) * (i / (data.length - 1));
@@ -142,7 +132,6 @@ class _CubicLineChartPainter extends CustomPainter {
       points.add(Offset(dx, dy));
     }
 
-    // Colors: dark green line, lighter transparent fill
     const Color lineColor = Color(0xFF0B7A4A); // darker green
     final Color fillColor = lineColor.withOpacity(0.12);
 
@@ -155,10 +144,8 @@ class _CubicLineChartPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
     final Paint dotPaint = Paint()..color = lineColor;
 
-    // Build cubic path using Catmull-Rom to Bezier conversion
     final Path path = _catmullRomToPath(points);
 
-    // Fill path: copy path and close to bottom
     final Path fillPath = Path.from(path);
     fillPath.lineTo(left + chartW, top + chartH);
     fillPath.lineTo(left, top + chartH);
@@ -167,7 +154,6 @@ class _CubicLineChartPainter extends CustomPainter {
     canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(path, linePaint);
 
-    // Draw latest point emphasized
     final last = points.last;
     canvas.drawCircle(last, 5.0, dotPaint);
   }

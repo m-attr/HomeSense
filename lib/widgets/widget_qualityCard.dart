@@ -4,7 +4,7 @@ class QualityCard extends StatelessWidget {
   final String qualityName;
   final IconData qualityIcon;
   final String qualityUnit;
-  final String qualityValue; // big display value
+  final String qualityValue; 
   final Color? valueColor;
   final VoidCallback? onViewDetails;
 
@@ -35,7 +35,6 @@ class QualityCard extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    // Icon + name stacked
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -61,7 +60,6 @@ class QualityCard extends StatelessWidget {
                       ],
                     ),
                     const Spacer(),
-                    // Value and unit on the right
                     Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.end,
@@ -80,7 +78,6 @@ class QualityCard extends StatelessWidget {
                   ],
                 ),
               ),
-              // View Details button bottom-right
               Row(
                 children: [
                   const Spacer(),

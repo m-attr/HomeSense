@@ -9,13 +9,10 @@ class AboutPage extends StatefulWidget {
 
 class _AboutPageState extends State<AboutPage> {
 
-  // Company contact details (edit as needed)
   static const String _companyPhone = '+15551234567';
   static const String _companyEmail = 'support@homesense.co';
   static const String _developerName = 'HomeSense Dev';
   static const String _developerEmail = 'dev@homesense.co';
-
-  // Note: interactivity removed — contact info remains visible but is not tappable.
 
   @override
   Widget build(BuildContext context) {
@@ -27,7 +24,6 @@ class _AboutPageState extends State<AboutPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Top-left back control (icon + text)
               Padding(
                 padding: const EdgeInsets.fromLTRB(12.0, 8.0, 12.0, 0.0),
                 child: Align(
@@ -36,17 +32,17 @@ class _AboutPageState extends State<AboutPage> {
                     onTap: () => Navigator.pushReplacementNamed(context, '/dashboard'),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
-                      children: const [
+                      children: [
                         Icon(Icons.arrow_back, color: Color(0xFFFFFFFF), size: 24,),
                         SizedBox(width: 6),
                         Text('Back', style: TextStyle(color: Color(0xFFFFFFFF), fontSize: 16)),
+                        SizedBox(height: MediaQuery.of(context).padding.top + 14)
                       ],
                     ),
                   ),
                 ),
               ),
 
-              // Full-width about banner image placed on a white background (edge-to-edge)
               Container(
                 color: Colors.white,
                 width: double.infinity,

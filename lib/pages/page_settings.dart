@@ -64,7 +64,6 @@ class _SettingsPageState extends State<SettingsPage> {
 
                 const SizedBox(height: 24),
 
-                // Display container as expansion (labels above selects)
                 Card(
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -75,7 +74,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       leading: const Icon(Icons.display_settings, color: green),
                       title: const Text('Display', style: TextStyle(fontWeight: FontWeight.w600)),
                       children: [
-                        // Energy Unit (label above select)
+                        // Energy 
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                           child: Row(
@@ -111,7 +110,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
 
-                        // Water Unit
+                        // Water 
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                           child: Row(
@@ -147,7 +146,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                         ),
 
-                        // Temperature Unit
+                        // Temperature 
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
                           child: Row(
@@ -189,7 +188,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                 const SizedBox(height: 12),
 
-                // Notifications container as expansion with toggles and descriptions
+                // Notifications 
                 Card(
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
@@ -264,7 +263,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                 const SizedBox(height: 12),
 
-                // Comfort container: electricity & water targets with custom inputs
+                // Comfort 
                 Card(
                   elevation: 0,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),

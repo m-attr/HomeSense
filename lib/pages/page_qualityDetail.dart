@@ -17,17 +17,13 @@ class QualityDetailPage extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Top block edge-to-edge: make the background up to and including the chart the universal green hue
             Container(
               width: double.infinity,
               color: green,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // Add extra top spacing so the back button isn't tucked too
-                  // close to the top edge and is easier to tap.
                   SizedBox(height: MediaQuery.of(context).padding.top + 14),
-                  // Top row: back icon aligned left (returns to home)
                   Row(
                     children: [
                       IconButton(
@@ -40,7 +36,6 @@ class QualityDetailPage extends StatelessWidget {
                     ],
                   ),
 
-                  // Centered header showing the selected room
                   const SizedBox(height: 6),
                   Center(
                     child: Text(
@@ -50,7 +45,7 @@ class QualityDetailPage extends StatelessWidget {
                   ),
                   const SizedBox(height: 16),
 
-                  // Real-time / historical chart for the selected quality
+                  // chart for the selected quality
                   SizedBox(
                     height: 260,
                     child: RealTimeChart(label: quality),
@@ -59,7 +54,6 @@ class QualityDetailPage extends StatelessWidget {
               ),
             ),
 
-            // Remaining content keeps the original padding
             Padding(
               padding: const EdgeInsets.all(16.0),
               child: Column(
@@ -75,10 +69,8 @@ class QualityDetailPage extends StatelessWidget {
 
                   const SizedBox(height: 8),
 
-                  // Devices list: one device per row
                   Column(
                     children: List.generate(3, (i) {
-                      // Choose unit based on the quality being viewed
                       String unit;
                       IconData leftIcon;
                       if (quality.toLowerCase().contains('electric')) {

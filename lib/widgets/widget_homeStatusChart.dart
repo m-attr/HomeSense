@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-// Reusable home status doughnut chart widget with animation.
-// Usage: `HomeStatusChart(score: 71)` — animates from 0 to score.
+// animate from 0 to respective score
 class HomeStatusChart extends StatefulWidget {
   final int score; // 0..100
   final double width;
@@ -20,11 +19,11 @@ class _HomeStatusChartState extends State<HomeStatusChart> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    // animate over 900ms
+    // duration of animation is 900ms
     _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
     final curved = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
 
-    // target sweep is proportional to score (0..100) across the semicircle (pi radians)
+    // target sweep is proportional to score (0-100) across the semicircle 
     final double targetSweep = (widget.score.clamp(0, 100) / 100.0) * 3.14;
     _animation = Tween<double>(begin: 0.0, end: targetSweep).animate(curved)
       ..addListener(() {
@@ -106,17 +105,14 @@ class _HomeStatusPainter extends CustomPainter {
       ..strokeWidth = 18.0
       ..strokeCap = StrokeCap.round;
 
-    // Draw a light background (partial semicircle)
     canvas.drawArc(rect, -3.14, 3.14, false, background);
 
-    // Draw the animated amber arc from the left up to current sweep
     final double start = -3.14; // left
     final double current = sweep.clamp(0.0, 3.14);
     if (current > 0) {
       canvas.drawArc(rect, start, current, false, arcPaint);
     }
-
-    // Cover the remaining gap with a white stroke so the header doesn't show through
+    
     final double gapStart = start + current;
     final double gapSweep = 3.14 - current; // remaining arc of the semicircle
     if (gapSweep > 0.001) {

@@ -40,7 +40,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       curve: Curves.easeInOutCubic,
     ));
     _animationController.forward();
-    // Horizontal swipe controller (used when transitioning to dashboard)
     _swipeController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
@@ -51,7 +50,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     // debug: show whether this page was opened with showCreated
     debugPrint('LoginPage.initState showCreated=${widget.showCreated}');
 
-    // Show signup-created banner if requested
     _showCreatedBanner = widget.showCreated;
     if (_showCreatedBanner) {
       _bannerTimer = Timer(const Duration(seconds: 3), () {
@@ -59,7 +57,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       });
     }
 
-    // Prefill email if user previously chose "Remember Me"
+    // prefill email if user previously chose "Remember Me"
     final repo = UserRepository.instance;
     if (repo.lastLoggedInEmail != null) {
       _emailController.text = repo.lastLoggedInEmail!;
@@ -78,7 +76,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   }
 
   void _navigateTo(Widget page) {
-    // Animate container down, then navigate (the target page will animate up on its own)
     _animationController.reverse().then((_) {
       Navigator.push(
         context,
@@ -222,16 +219,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                             ),
                             const Text('Remember Me'),
                           ],
-                        ),
-                        const Spacer(),
-                        TextButton(
-                          onPressed: () {
-                            // Leave empty for now (per request)
-                          },
-                          child: Text(
-                            'Forget Password?',
-                            style: TextStyle(color: const Color(0xFF1EAA83)),
-                          ),
                         ),
                       ],
                     ),

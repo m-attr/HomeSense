@@ -26,7 +26,6 @@ class _DashboardPageState extends State<DashboardPage> {
     if (value >= threshold * 0.8) return Colors.amber;
     return null;
   }
-  // Per-room sample data (three rooms). Replace with live data plumbing.
   final List<Map<String, double>> _roomSamples = [
     // Living Room
     {
@@ -125,8 +124,6 @@ class _DashboardPageState extends State<DashboardPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Full-width green header containing title + doughnut. No horizontal padding so it
-              // spans the full device width (it sits outside the page content padding).
               Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
@@ -136,7 +133,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     bottomRight: Radius.circular(20),
                   ),
                 ),
-                // Remove horizontal padding here so doughnut reaches edge; keep a small top spacing.
+
                 padding: const EdgeInsets.only(top: 12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
@@ -147,10 +144,10 @@ class _DashboardPageState extends State<DashboardPage> {
                       style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                     ),),
                     const SizedBox(height: 6),
-                    // Doughnut score (centered) — now provided by reusable widget
+
                     Center(child: HomeStatusChart(score: 71)),
 
-                    // Status container placed inside the green header (inset from the edges)
+                 
                     Container(
                       margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
                       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
@@ -176,15 +173,13 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
 
-              // Remaining content stays inside the page padding
+              // remaining content stays inside the page padding
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
 
-
-                    // Nav bar (full-width within page padding)
                     RoomNavBar(
                       selectedIndex: _selectedRoomIndex,
                       onSelected: (i) => setState(() => _selectedRoomIndex = i),
@@ -192,20 +187,13 @@ class _DashboardPageState extends State<DashboardPage> {
 
                     const SizedBox(height: 12),
 
-                    // Horizontal list of quality cards (shorter) — reduced to 3: Electricity, Water, Temperature
                     SizedBox(
                       height: 220,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [
                           const SizedBox(width: 8),
-                          // choose sample values based on the selected room
-                          // so the same cards show different numbers per room
-                          // (Living Room, Kitchen, Bedroom)
-                          
-                          // compute current room values
                           (() {
-                            // this closure is immediately invoked to scope vars
                             final idx = _selectedRoomIndex.clamp(0, _roomSamples.length - 1);
                             final current = _roomSamples[idx];
                             final elec = current['electricity'] ?? 0.0;
@@ -225,7 +213,7 @@ class _DashboardPageState extends State<DashboardPage> {
                               ),
                             );
                           })(),
-                          // Removed duplicate static Electricity card — values come from room samples above.
+                      
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 6.0),
                             child: Builder(builder: (context) {
@@ -272,8 +260,7 @@ class _DashboardPageState extends State<DashboardPage> {
                     ),
 
                     const SizedBox(height: 24),
-
-                    // Full width Add Location button
+                    
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(

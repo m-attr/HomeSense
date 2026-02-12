@@ -18,12 +18,6 @@ class _SplashAnimationState extends State<SplashAnimation>
   @override
   void initState() {
     super.initState();
-
-    // Single controller with timeline intervals:
-    // 0.00-0.20 -> idle (circle shown)
-    // 0.20-0.50 -> logo fade in
-    // 0.50-0.75 -> hold logo visible
-    // 0.75-1.00 -> expand (scale) and then navigate
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2200),
@@ -39,14 +33,12 @@ class _SplashAnimationState extends State<SplashAnimation>
 
     _controller.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        // Navigate after the expand animation finishes
         Navigator.of(context).push(
           MyCustomRouteTransition(
             route: const WelcomePage(),
           ),
         );
 
-        // Reset a short while after navigation to allow re-use if necessary
         Timer(const Duration(milliseconds: 500), () {
           _controller.reset();
         });
