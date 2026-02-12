@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'page_signup.dart';
 import 'page_welcome.dart';
 import '../../models/user.dart';
-import '../page_dashboard.dart';
+import '../page_dashboard.dart' show DashboardPage;
 
 class LoginPage extends StatefulWidget {
   final bool showCreated;

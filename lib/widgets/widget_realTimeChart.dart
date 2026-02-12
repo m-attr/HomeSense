@@ -1,182 +1,259 @@
-import 'dart:async';
-import 'dart:math';
 import 'package:flutter/material.dart';
 
-class RealTimeChart extends StatefulWidget {
+/// Responsive, dependency-free weekly electricity usage chart.
+///
+/// This implementation measures available space and lays out three
+/// fixed-height regions (title, chart area, labels) so it cannot
+/// overflow its parent. It uses CustomPainter for drawing.
+class RealTimeChart extends StatelessWidget {
   const RealTimeChart({super.key});
 
-  @override
-  State<RealTimeChart> createState() => _RealTimeChartState();
-}
-
-class _RealTimeChartState extends State<RealTimeChart> with SingleTickerProviderStateMixin {
-  final List<double> _dataPoints = [];
-  final Random _random = Random();
-  late Timer _timer;
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  double _previousPoint = 100;
-  double _currentPoint = 100;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 500),
-    );
-
-    _animation = CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeInOut,
-    );
-
-    _timer = Timer.periodic(Duration(milliseconds: 1000), (timer) {
-      _addDataPoint();
-    });
-  }
-
-  void _addDataPoint() {
-    setState(() {
-      _previousPoint = _currentPoint;
-      _currentPoint = (_previousPoint + (_random.nextDouble() * 40 - 20)).clamp(10.0, 200.0);
-
-      _controller.reset();
-      _controller.forward();
-    });
-  }
-
-  @override
-  void dispose() {
-    _timer.cancel();
-    _controller.dispose();
-    super.dispose();
-  }
+  // Sample data: electricity usage per week (kWh)
+  List<double> get _weeklyData => [32, 28, 35, 30, 40, 38, 34];
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    final theme = Theme.of(context);
+    return LayoutBuilder(builder: (context, constraints) {
+      // Use the provided max height when available; otherwise fall back to 300.
+      final double totalH = (constraints.maxHeight.isFinite && constraints.maxHeight > 0) ? constraints.maxHeight : 300.0;
+
+      // Outer paddings and internal spacings
+      const double outerPadding = 12.0;
+      const double innerVPad = 12.0;
+      const double headerH = 28.0;
+      const double labelH = 20.0;
+      const double spacing = 8.0;
+
+      // Compute chart height as the remaining space; ensure non-negative.
+      final double chartH = (totalH - (outerPadding * 2) - innerVPad * 2 - headerH - labelH - spacing * 2).clamp(40.0, 1000.0);
+
+      return Padding(
+        padding: const EdgeInsets.all(outerPadding),
         child: Container(
-          width: double.infinity,
-          margin: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: Colors.blueGrey.withValues(alpha: 0.04),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.blueGrey.shade200,
-              width: 1,
+          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+          padding: const EdgeInsets.symmetric(vertical: innerVPad, horizontal: 12),
+          child: SizedBox(
+            height: totalH - outerPadding * 2,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  height: headerH,
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text('Electricity used (kWh) — last 7 days',
+                        style: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w600)),
+                  ),
+                ),
+                const SizedBox(height: spacing),
+                SizedBox(
+                  height: chartH,
+                  child: CustomPaint(
+                    painter: _CubicLineChartPainter(data: _weeklyData),
+                    size: Size(constraints.maxWidth, chartH),
+                  ),
+                ),
+                const SizedBox(height: spacing),
+                SizedBox(
+                  height: labelH,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      Text('Mon', style: TextStyle(fontSize: 12)),
+                      Text('Tue', style: TextStyle(fontSize: 12)),
+                      Text('Wed', style: TextStyle(fontSize: 12)),
+                      Text('Thu', style: TextStyle(fontSize: 12)),
+                      Text('Fri', style: TextStyle(fontSize: 12)),
+                      Text('Sat', style: TextStyle(fontSize: 12)),
+                      Text('Sun', style: TextStyle(fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ],
             ),
-          ),
-          child: AnimatedBuilder(
-            animation: _animation,
-            builder: (context, child) {
-              final interpolatedPoint =
-                  _previousPoint + (_currentPoint - _previousPoint) * _animation.value;
-              _dataPoints.add(interpolatedPoint);
-              if (_dataPoints.length > 1000) {
-                _dataPoints.removeAt(0);
-              }
-              return CustomPaint(
-                painter: LineChartPainter(_dataPoints),
-              );
-            },
           ),
         ),
       );
+    });
   }
 }
 
-class LineChartPainter extends CustomPainter {
-  final List<double> points;
+/// Painter that draws a cubic-smoothed curve, fills the area beneath it,
+/// and marks the latest point with a dot. Uses a darker green for the line
+/// and a translucent lighter fill.
+class _CubicLineChartPainter extends CustomPainter {
+  final List<double> data;
 
-  LineChartPainter(this.points);
-
-  void _drawDottedLine(
-    Canvas canvas,
-    Offset p1,
-    Offset p2,
-    Paint paint, {
-    double dash = 5,
-    double gap = 5,
-  }) {
-    final Path path = Path();
-    double currentLength = 0;
-
-    final double totalLength = (p2 - p1).distance;
-    final double angle = (p2 - p1).direction;
-
-    while (currentLength < totalLength) {
-      path.moveTo(
-        p1.dx + currentLength * cos(angle),
-        p1.dy + currentLength * sin(angle),
-      );
-      currentLength += dash;
-      if (currentLength > totalLength) {
-        currentLength = totalLength;
-      }
-      path.lineTo(
-        p1.dx + currentLength * cos(angle),
-        p1.dy + currentLength * sin(angle),
-      );
-      currentLength += gap;
-    }
-    canvas.drawPath(path, paint);
-  }
+  _CubicLineChartPainter({required this.data});
 
   @override
   void paint(Canvas canvas, Size size) {
+    if (data.isEmpty) return;
+
+    final double left = 8.0, right = 8.0, top = 6.0, bottom = 6.0;
+    final chartW = size.width - left - right;
+    final chartH = size.height - top - bottom;
+    if (chartW <= 0 || chartH <= 0) return;
+
+    final double minVal = data.reduce((a, b) => a < b ? a : b);
+    final double maxVal = data.reduce((a, b) => a > b ? a : b);
+    final double range = (maxVal - minVal) == 0 ? 1.0 : (maxVal - minVal);
+
+    // Map data to points
+    final points = <Offset>[];
+    for (int i = 0; i < data.length; i++) {
+      final dx = left + (chartW) * (i / (data.length - 1));
+      final dy = top + chartH - ((data[i] - minVal) / range) * chartH;
+      points.add(Offset(dx, dy));
+    }
+
+    // Colors: dark green line, lighter transparent fill
+    const Color lineColor = Color(0xFF0B7A4A); // darker green
+    final Color fillColor = lineColor.withOpacity(0.12);
+
+    final Paint fillPaint = Paint()..color = fillColor..style = PaintingStyle.fill;
     final Paint linePaint = Paint()
-      ..color = Colors.blueGrey.shade700
-      ..strokeWidth = 4
-      ..style = PaintingStyle.stroke;
+      ..color = lineColor
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.0
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+    final Paint dotPaint = Paint()..color = lineColor;
 
-    final Paint gridPaint = Paint()
-      ..color = Colors.blueGrey.shade200
-      ..strokeWidth = 0.5
-      ..style = PaintingStyle.stroke;
+    // Build cubic path using Catmull-Rom to Bezier conversion
+    final Path path = _catmullRomToPath(points);
 
-    // Draw horizontal grid lines
-    const int internalHorizontalGridLines = 5;
-    if (size.height > 0 && internalHorizontalGridLines > 0) {
-      final double horizontalStep = size.height / (internalHorizontalGridLines + 1);
-      for (int i = 1; i <= internalHorizontalGridLines; i++) {
-        final y = size.height - (i * horizontalStep);
-        _drawDottedLine(canvas, Offset(0, y), Offset(size.width, y), gridPaint);
-      }
-    }
+    // Fill path: copy path and close to bottom
+    final Path fillPath = Path.from(path);
+    fillPath.lineTo(left + chartW, top + chartH);
+    fillPath.lineTo(left, top + chartH);
+    fillPath.close();
 
-    // Draw vertical grid lines
-    const int internalVerticalGridLines = 7;
-    if (size.width > 0 && internalVerticalGridLines > 0) {
-      final double verticalStep = size.width / (internalVerticalGridLines + 1);
-      for (int i = 1; i <= internalVerticalGridLines; i++) {
-        final x = i * verticalStep;
-        _drawDottedLine(canvas, Offset(x, 0), Offset(x, size.height), gridPaint);
-      }
-    }
-
-    final double maxValue = 220.0;
-    final double minValue = 0.0;
-    final double range = maxValue - minValue;
-    final double dx = size.width / (points.length > 1 ? points.length - 1 : 1);
-
-    final Path path = Path();
-
-    if (points.isNotEmpty) {
-      double firstX = 0;
-      double firstY = size.height - ((points[0] - minValue) / range * size.height);
-      path.moveTo(firstX, firstY);
-
-      for (int i = 0; i < points.length; i++) {
-        final x = i * dx;
-        final y = size.height - ((points[i] - minValue) / range * size.height);
-        path.lineTo(x, y);
-      }
-    }
-
+    canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(path, linePaint);
+
+    // Draw latest point emphasized
+    final last = points.last;
+    canvas.drawCircle(last, 5.0, dotPaint);
+  }
+
+  Path _catmullRomToPath(List<Offset> pts) {
+    final Path path = Path();
+    if (pts.isEmpty) return path;
+    if (pts.length == 1) {
+      path.moveTo(pts[0].dx, pts[0].dy);
+      return path;
+    }
+
+    path.moveTo(pts[0].dx, pts[0].dy);
+
+    for (int i = 0; i < pts.length - 1; i++) {
+      final p0 = i - 1 >= 0 ? pts[i - 1] : pts[i];
+      final p1 = pts[i];
+      final p2 = pts[i + 1];
+      final p3 = i + 2 < pts.length ? pts[i + 2] : p2;
+
+      final control1 = Offset(
+        p1.dx + (p2.dx - p0.dx) / 6.0,
+        p1.dy + (p2.dy - p0.dy) / 6.0,
+      );
+      final control2 = Offset(
+        p2.dx - (p3.dx - p1.dx) / 6.0,
+        p2.dy - (p3.dy - p1.dy) / 6.0,
+      );
+
+      path.cubicTo(control1.dx, control1.dy, control2.dx, control2.dy, p2.dx, p2.dy);
+    }
+
+    return path;
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
+
+class _ResponsiveLineChartPainter extends CustomPainter {
+  final List<double> data;
+  final ThemeData theme;
+
+  _ResponsiveLineChartPainter({required this.data, required this.theme});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    // Basic paddings inside the chart area.
+    const double left = 6.0;
+    const double right = 6.0;
+    const double top = 6.0;
+    const double bottom = 6.0;
+
+    final chartW = size.width - left - right;
+    final chartH = size.height - top - bottom;
+
+    if (chartW <= 0 || chartH <= 0) return;
+
+    final double minVal = data.reduce((a, b) => a < b ? a : b);
+    final double maxVal = data.reduce((a, b) => a > b ? a : b);
+    final double range = (maxVal - minVal).abs();
+    final double denom = range == 0 ? 1.0 : range;
+
+    // Paints
+    final Paint gridPaint = Paint()
+      ..color = Colors.grey.withOpacity(0.12)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.0;
+
+    final Paint fillPaint = Paint()
+      ..color = theme.colorScheme.primary.withOpacity(0.12)
+      ..style = PaintingStyle.fill;
+
+    final Paint linePaint = Paint()
+      ..color = theme.colorScheme.primary
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.6
+      ..strokeCap = StrokeCap.round
+      ..strokeJoin = StrokeJoin.round;
+
+    final Paint dotPaint = Paint()..color = theme.colorScheme.primary;
+
+    // Optional horizontal grid lines (3 rows)
+    for (int i = 0; i <= 3; i++) {
+      final y = top + (chartH * i / 3);
+      canvas.drawLine(Offset(left, y), Offset(left + chartW, y), gridPaint);
+    }
+
+    // Build path and fill
+    final Path linePath = Path();
+    final Path fillPath = Path();
+
+    for (int i = 0; i < data.length; i++) {
+      final dx = left + (chartW) * (i / (data.length - 1));
+      final dy = top + chartH - ((data[i] - minVal) / denom) * chartH;
+      if (i == 0) {
+        linePath.moveTo(dx, dy);
+        fillPath.moveTo(dx, top + chartH);
+        fillPath.lineTo(dx, dy);
+      } else {
+        linePath.lineTo(dx, dy);
+        fillPath.lineTo(dx, dy);
+      }
+    }
+    // close fill
+    fillPath.lineTo(left + chartW, top + chartH);
+    fillPath.close();
+
+    // draw fill, line, dots
+    canvas.drawPath(fillPath, fillPaint);
+    canvas.drawPath(linePath, linePaint);
+
+    for (int i = 0; i < data.length; i++) {
+      final dx = left + (chartW) * (i / (data.length - 1));
+      final dy = top + chartH - ((data[i] - minVal) / denom) * chartH;
+      canvas.drawCircle(Offset(dx, dy), 3.0, dotPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+

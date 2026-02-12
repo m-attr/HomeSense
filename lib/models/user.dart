@@ -34,9 +34,9 @@ class UserRepository {
     //  password: DemoPass123
     // Feel free to change these or remove the seed in production.
     _users.add(User(
-      fullName: 'Demo User',
-      email: 'demo@homesense.test',
-      password: 'DemoPass123',
+      fullName: 'Matt',
+      email: '1007mattansel@gmail.com',
+      password: 'Mattansel01',
       profileImage: null,
       location: 'Home',
       phoneNumber: '+441234567890',

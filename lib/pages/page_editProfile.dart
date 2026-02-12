@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../models/user.dart';
-import 'page_dashboard.dart';
+import 'page_dashboard.dart' show DashboardPage;
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});

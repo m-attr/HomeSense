@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'animations/animation_home.dart';
-import 'pages/page_dashboard.dart';
+import 'pages/page_dashboard.dart' show DashboardPage;
 
 void main() {
   runApp(const MainApp());

@@ -68,7 +68,7 @@ class WidgetMenuDrawer extends StatelessWidget {
                           child: Container(
                             decoration: BoxDecoration(color: Colors.white54, shape: BoxShape.circle),
                             padding: const EdgeInsets.all(6),
-                            child: const Icon(Icons.edit, size: 18, color: Colors.black87),
+                            child: const Icon(Icons.edit, size: 18, color: Colors.white),
                           ),
                         ),
                       ),
