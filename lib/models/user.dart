@@ -22,12 +22,27 @@ class User {
 
 /// Simple in-memory repository for demo purposes.
 class UserRepository {
-  UserRepository._privateConstructor();
   static final UserRepository instance = UserRepository._privateConstructor();
-
   final List<User> _users = [];
   User? currentUser;
   String? lastLoggedInEmail;
+
+  UserRepository._privateConstructor() {
+    // Seed a demo user so you can log in without signing up.
+    // Credentials:
+    //  email: demo@homesense.test
+    //  password: DemoPass123
+    // Feel free to change these or remove the seed in production.
+    _users.add(User(
+      fullName: 'Demo User',
+      email: 'demo@homesense.test',
+      password: 'DemoPass123',
+      profileImage: null,
+      location: 'Home',
+      phoneNumber: '+441234567890',
+      gender: 'Prefer not to say',
+    ));
+  }
 
   List<User> get users => List.unmodifiable(_users);
 

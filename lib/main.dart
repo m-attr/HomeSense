@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'animations/animation_home.dart';
+import 'pages/page_dashboard.dart';
 
 void main() {
   runApp(const MainApp());
@@ -14,6 +15,9 @@ class MainApp extends StatelessWidget {
       home: Scaffold(
         body: const SplashAnimation(),
       ),
+      routes: {
+        '/dashboard': (context) => const DashboardPage(),
+      },
     );
 
     // return DashboardPage();
