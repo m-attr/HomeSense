@@ -20,7 +20,7 @@ class QualityCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return SizedBox(
       width: 170,
-      height: 110,
+      height: 170,
       child: Card(
         elevation: 6,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

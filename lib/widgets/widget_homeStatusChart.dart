@@ -1,16 +1,64 @@
 import 'package:flutter/material.dart';
 
-// Reusable home status doughnut chart widget.
-// Usage: `HomeStatusChart(score: 71)`
-class HomeStatusChart extends StatelessWidget {
-  final int score;
+// Reusable home status doughnut chart widget with animation.
+// Usage: `HomeStatusChart(score: 71)` — animates from 0 to score.
+class HomeStatusChart extends StatefulWidget {
+  final int score; // 0..100
   final double width;
   final double height;
 
   const HomeStatusChart({super.key, required this.score, this.width = 240, this.height = 170});
 
   @override
+  State<HomeStatusChart> createState() => _HomeStatusChartState();
+}
+
+class _HomeStatusChartState extends State<HomeStatusChart> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _animation;
+
+  @override
+  void initState() {
+    super.initState();
+    // animate over 900ms
+    _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
+    final curved = CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic);
+
+    // target sweep is proportional to score (0..100) across the semicircle (pi radians)
+    final double targetSweep = (widget.score.clamp(0, 100) / 100.0) * 3.14;
+    _animation = Tween<double>(begin: 0.0, end: targetSweep).animate(curved)
+      ..addListener(() {
+        if (mounted) setState(() {});
+      });
+
+    // start animation after build
+    WidgetsBinding.instance.addPostFrameCallback((_) => _controller.forward());
+  }
+
+  @override
+  void didUpdateWidget(covariant HomeStatusChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.score != widget.score) {
+      final double newTarget = (widget.score.clamp(0, 100) / 100.0) * 3.14;
+      _animation = Tween<double>(begin: 0.0, end: newTarget).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
+      _controller
+        ..reset()
+        ..forward();
+    }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final double width = widget.width;
+    final double height = widget.height;
+    final double currentSweep = _animation.value;
+
     return SizedBox(
       width: width,
       height: height,
@@ -21,12 +69,12 @@ class HomeStatusChart extends StatelessWidget {
             width: width * 0.92,
             height: height * 0.88,
             child: CustomPaint(
-              painter: _HomeStatusPainter(),
+              painter: _HomeStatusPainter(sweep: currentSweep),
             ),
           ),
           // score text
           Text(
-            '$score',
+            '${widget.score}',
             style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.white),
           ),
         ],
@@ -36,6 +84,9 @@ class HomeStatusChart extends StatelessWidget {
 }
 
 class _HomeStatusPainter extends CustomPainter {
+  final double sweep; // radians of yellow arc
+  _HomeStatusPainter({required this.sweep});
+
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -58,30 +109,34 @@ class _HomeStatusPainter extends CustomPainter {
     // Draw a light background (partial semicircle)
     canvas.drawArc(rect, -3.14, 3.14, false, background);
 
-    // Draw the accent arc (omit bottom segment by limiting sweep)
-    final double start = -3.14; // start at left
-    final double sweep = 2.6; // less than pi to leave bottom gap
-    canvas.drawArc(rect, start, sweep, false, arcPaint);
+    // Draw the animated amber arc from the left up to current sweep
+    final double start = -3.14; // left
+    final double current = sweep.clamp(0.0, 3.14);
+    if (current > 0) {
+      canvas.drawArc(rect, start, current, false, arcPaint);
+    }
 
     // Cover the remaining gap with a white stroke so the header doesn't show through
-    final double gapStart = start + sweep;
-    final double gapSweep = 3.14 - sweep; // remaining arc of the semicircle
-    final Paint gapCover = Paint()
-      ..color = Colors.white
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 20.0
-      ..strokeCap = StrokeCap.round;
-    canvas.drawArc(rect, gapStart, gapSweep, false, gapCover);
+    final double gapStart = start + current;
+    final double gapSweep = 3.14 - current; // remaining arc of the semicircle
+    if (gapSweep > 0.001) {
+      final Paint gapCover = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 20.0
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(rect, gapStart, gapSweep, false, gapCover);
 
-    // Draw a subtle border around the white gap to make the edge visible
-    final Paint gapBorder = Paint()
-      ..color = Colors.grey.withOpacity(0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round;
-    canvas.drawArc(rect, gapStart, gapSweep, false, gapBorder);
+      // Draw a subtle border around the white gap to make the edge visible
+      final Paint gapBorder = Paint()
+        ..color = Colors.grey.withOpacity(0.5)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.0
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(rect, gapStart, gapSweep, false, gapBorder);
+    }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _HomeStatusPainter oldDelegate) => oldDelegate.sweep != sweep;
 }

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../widgets/widget_realTimeChart.dart';
+import '../widgets/widget_fixedChart.dart';
 import '../widgets/widget_qualityDeviceCard.dart';
 
 class QualityDetailPage extends StatelessWidget {
@@ -27,6 +27,7 @@ class QualityDetailPage extends StatelessWidget {
                       color: green,
                       onPressed: () => Navigator.pushReplacementNamed(context, '/dashboard'),
                     ),
+                    Text('Back', style: TextStyle(color: Colors.white, fontSize: 16)),
                   ],
                 ),
 
