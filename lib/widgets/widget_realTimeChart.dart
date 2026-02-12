@@ -57,7 +57,6 @@ class _RealTimeChartState extends State<RealTimeChart> with SingleTickerProvider
   Widget build(BuildContext context) {
     return Center(
         child: Container(
-          height: 200,
           width: double.infinity,
           margin: const EdgeInsets.all(16),
           decoration: BoxDecoration(

@@ -1,4 +1,4 @@
-import 'package:egl208_project/pages/page_welcome.dart';
+import '../pages/signup&login/page_welcome.dart';
 import 'package:flutter/material.dart';
 import 'dart:async';
 

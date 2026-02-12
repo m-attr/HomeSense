@@ -3,6 +3,7 @@ import 'page_about.dart';
 import 'page_insights.dart';
 import 'page_notifications.dart';
 import 'page_settings.dart';
+import 'page_editProfile.dart';
 import '../widgets/widget_qualityCard.dart';
 import '../widgets/widget_realTimeChart.dart';
 
@@ -56,6 +57,14 @@ class DashboardPage extends StatelessWidget {
                 },
               ),
               ListTile(
+                leading: const Icon(Icons.person),
+                title: const Text('MyProfile'),
+                onTap: () {
+                  Navigator.pop(context);
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => const EditProfilePage()));
+                },
+              ),
+              ListTile(
                 leading: const Icon(Icons.info_outline),
                 title: const Text('About'),
                 onTap: () {
@@ -91,9 +100,10 @@ class DashboardPage extends StatelessWidget {
           ),
         ),
         backgroundColor: Color(0xFF1EAA83),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
             Padding(
               padding: const EdgeInsets.all(24),
               child: Text(
@@ -140,10 +150,16 @@ class DashboardPage extends StatelessWidget {
                 ),
               ),
             ),
-            const RealTimeChart(),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                child: const RealTimeChart(),
+              ),
+            ),
           ],
-        ),
-      ),
-    );
+        ), // Column
+      ), // SafeArea
+    ), // Scaffold
+  ); // MaterialApp
   }
 }
