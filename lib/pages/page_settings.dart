@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../models/settings.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -97,7 +98,11 @@ class _SettingsPageState extends State<SettingsPage> {
                                         DropdownMenuItem(value: 'kWh (Kilowatt-hour)', child: Text('kWh (Kilowatt-hour)')),
                                         DropdownMenuItem(value: 'Wh (Watt-hour)', child: Text('Wh (Watt-hour)')),
                                       ],
-                                      onChanged: (v) => setState(() => _energyUnit = v ?? _energyUnit),
+                                      onChanged: (v) {
+                                        if (v == null) return;
+                                        setState(() => _energyUnit = v);
+                                        Settings.instance.setEnergyUnit(v);
+                                      },
                                     ),
                                   ],
                                 ),
@@ -129,7 +134,11 @@ class _SettingsPageState extends State<SettingsPage> {
                                         DropdownMenuItem(value: 'Litres (L)', child: Text('Litres (L)')),
                                         DropdownMenuItem(value: 'Cubic Metres (m³)', child: Text('Cubic Metres (m³)')),
                                       ],
-                                      onChanged: (v) => setState(() => _waterUnit = v ?? _waterUnit),
+                                      onChanged: (v) {
+                                        if (v == null) return;
+                                        setState(() => _waterUnit = v);
+                                        Settings.instance.setWaterUnit(v);
+                                      },
                                     ),
                                   ],
                                 ),
@@ -161,7 +170,11 @@ class _SettingsPageState extends State<SettingsPage> {
                                         DropdownMenuItem(value: '°C (Celsius)', child: Text('°C (Celsius)')),
                                         DropdownMenuItem(value: '°F (Fahrenheit)', child: Text('°F (Fahrenheit)')),
                                       ],
-                                      onChanged: (v) => setState(() => _temperatureUnit = v ?? _temperatureUnit),
+                                      onChanged: (v) {
+                                        if (v == null) return;
+                                        setState(() => _temperatureUnit = v);
+                                        Settings.instance.setTemperatureUnit(v);
+                                      },
                                     ),
                                   ],
                                 ),
@@ -287,18 +300,42 @@ class _SettingsPageState extends State<SettingsPage> {
                                         DropdownMenuItem(value: '15 kWh (High Usage)', child: Text('15 kWh (High Usage)')),
                                         DropdownMenuItem(value: 'Custom', child: Text('Custom')),
                                       ],
-                                      onChanged: (v) => setState(() => _electricityTarget = v ?? _electricityTarget),
+                                      onChanged: (v) {
+                                        if (v == null) return;
+                                        setState(() => _electricityTarget = v);
+                                        // Update shared settings immediately for preset values
+                                        if (v != 'Custom') {
+                                          Settings.instance.setElectricityThresholdFromLabel(v);
+                                        }
+                                      },
                                     ),
                                     if (_electricityTarget == 'Custom') ...[
                                       const SizedBox(height: 8),
-                                      TextField(
-                                        controller: _electricityCustomController,
-                                        keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                        decoration: const InputDecoration(
-                                          hintText: 'Enter custom kWh value',
-                                          border: OutlineInputBorder(),
-                                          isDense: true,
-                                        ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextField(
+                                              controller: _electricityCustomController,
+                                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                              decoration: const InputDecoration(
+                                                hintText: 'Enter custom kWh value',
+                                                border: OutlineInputBorder(),
+                                                isDense: true,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              final v = double.tryParse(_electricityCustomController.text.trim());
+                                              if (v != null) {
+                                                Settings.instance.setElectricityThresholdFromLabel('Custom', customValue: v);
+                                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Electricity target updated')));
+                                              }
+                                            },
+                                            child: const Text('Apply'),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ],
@@ -333,18 +370,41 @@ class _SettingsPageState extends State<SettingsPage> {
                                         DropdownMenuItem(value: '200 L (High Usage)', child: Text('200 L (High Usage)')),
                                         DropdownMenuItem(value: 'Custom', child: Text('Custom')),
                                       ],
-                                      onChanged: (v) => setState(() => _waterUsageTarget = v ?? _waterUsageTarget),
+                                      onChanged: (v) {
+                                        if (v == null) return;
+                                        setState(() => _waterUsageTarget = v);
+                                        if (v != 'Custom') {
+                                          Settings.instance.setWaterThresholdFromLabel(v);
+                                        }
+                                      },
                                     ),
                                     if (_waterUsageTarget == 'Custom') ...[
                                       const SizedBox(height: 8),
-                                      TextField(
-                                        controller: _waterCustomController,
-                                        keyboardType: TextInputType.numberWithOptions(decimal: true),
-                                        decoration: const InputDecoration(
-                                          hintText: 'Enter custom litres value',
-                                          border: OutlineInputBorder(),
-                                          isDense: true,
-                                        ),
+                                      Row(
+                                        children: [
+                                          Expanded(
+                                            child: TextField(
+                                              controller: _waterCustomController,
+                                              keyboardType: TextInputType.numberWithOptions(decimal: true),
+                                              decoration: const InputDecoration(
+                                                hintText: 'Enter custom litres value',
+                                                border: OutlineInputBorder(),
+                                                isDense: true,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          ElevatedButton(
+                                            onPressed: () {
+                                              final v = double.tryParse(_waterCustomController.text.trim());
+                                              if (v != null) {
+                                                Settings.instance.setWaterThresholdFromLabel('Custom', customValue: v);
+                                                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Water target updated')));
+                                              }
+                                            },
+                                            child: const Text('Apply'),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ],

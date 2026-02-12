@@ -5,6 +5,7 @@ class QualityCard extends StatelessWidget {
   final IconData qualityIcon;
   final String qualityUnit;
   final String qualityValue; // big display value
+  final Color? valueColor;
   final VoidCallback? onViewDetails;
 
   const QualityCard({
@@ -13,15 +14,18 @@ class QualityCard extends StatelessWidget {
     required this.qualityIcon,
     required this.qualityUnit,
     required this.qualityValue,
+    this.valueColor,
     this.onViewDetails,
   });
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 170,
-      height: 170,
-      child: Card(
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12.0),
+      child: SizedBox(
+        width: 170,
+        height: 200,
+        child: Card(
         elevation: 6,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         child: Padding(
@@ -64,7 +68,7 @@ class QualityCard extends StatelessWidget {
                       children: [
                         Text(
                           qualityValue,
-                          style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+                          style: TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: valueColor ?? const Color(0xFF1EAA83)),
                         ),
                         const SizedBox(height: 4),
                         Text(
@@ -98,6 +102,7 @@ class QualityCard extends StatelessWidget {
           ),
         ),
       ),
+        ),
     );
   }
 }

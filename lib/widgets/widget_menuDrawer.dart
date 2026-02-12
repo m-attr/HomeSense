@@ -25,7 +25,7 @@ class WidgetMenuDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = UserRepository.instance;
     final user = repo.currentUser;
-    final placeholder = const AssetImage('images/nyp-logo.png');
+    final placeholder = const AssetImage('images/nyp-logo.jpg');
     final imageProvider = (user?.profileImage != null && user!.profileImage!.isNotEmpty)
         ? (user.profileImage!.startsWith('http') ? NetworkImage(user.profileImage!) : AssetImage(user.profileImage!)) as ImageProvider
         : placeholder;
@@ -124,6 +124,15 @@ class WidgetMenuDrawer extends StatelessWidget {
               Navigator.pop(context);
               if (onLogout != null) onLogout!();
             },
+          ),
+          const SizedBox(height: 12),
+          // App logo placed at the end of the drawer aligned to bottom-right
+          Padding(
+            padding: const EdgeInsets.only(right: 12.0, bottom: 12.0),
+            child: Align(
+              alignment: Alignment.centerRight,
+              child: Image.asset('images/homesense-logo.png', width: 56, height: 56),
+            ),
           ),
         ],
       ),

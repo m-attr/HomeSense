@@ -6,6 +6,7 @@ import 'signup&login/page_welcome.dart';
 import 'page_qualityDetail.dart';
 import '../models/user.dart';
 import '../widgets/widget_qualityCard.dart';
+import '../models/settings.dart';
 import '../widgets/widget_menuDrawer.dart';
 import '../widgets/widget_homeStatusChart.dart';
 
@@ -19,6 +20,33 @@ class DashboardPage extends StatefulWidget {
 class _DashboardPageState extends State<DashboardPage> {
   int _selectedRoomIndex = 0;
 
+  Color? _colorForValue(double value, double threshold) {
+    if (threshold <= 0) return Color(0xFF1EAA83);
+    if (value >= threshold) return Colors.red;
+    if (value >= threshold * 0.8) return Colors.amber;
+    return null;
+  }
+  // Per-room sample data (three rooms). Replace with live data plumbing.
+  final List<Map<String, double>> _roomSamples = [
+    // Living Room
+    {
+      'electricity': 8.6,
+      'water': 120.0,
+      'temperature': 21.0,
+    },
+    // Kitchen
+    {
+      'electricity': 12.4,
+      'water': 180.0,
+      'temperature': 23.5,
+    },
+    // Bedroom
+    {
+      'electricity': 6.2,
+      'water': 95.0,
+      'temperature': 20.0,
+    },
+  ];
   void _changeProfileImage(BuildContext context) async {
     final repo = UserRepository.instance;
     final current = repo.currentUser;
@@ -60,15 +88,7 @@ class _DashboardPageState extends State<DashboardPage> {
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: CircleAvatar(
-              backgroundImage: const AssetImage('images/homesense-logo.png'),
-              radius: 18,
-            ),
-          ),
-        ],
+        actions: [],
       ),
 
       drawer: WidgetMenuDrawer(
@@ -117,7 +137,7 @@ class _DashboardPageState extends State<DashboardPage> {
                   ),
                 ),
                 // Remove horizontal padding here so doughnut reaches edge; keep a small top spacing.
-                padding: const EdgeInsets.only(top: 18.0),
+                padding: const EdgeInsets.only(top: 12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
@@ -126,7 +146,7 @@ class _DashboardPageState extends State<DashboardPage> {
                       'Home Health Score',
                       style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                     ),),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 6),
                     // Doughnut score (centered) — now provided by reusable widget
                     Center(child: HomeStatusChart(score: 71)),
 
@@ -151,7 +171,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                   ],
                 ),
               ),
@@ -174,52 +194,77 @@ class _DashboardPageState extends State<DashboardPage> {
 
                     // Horizontal list of quality cards (shorter) — reduced to 3: Electricity, Water, Temperature
                     SizedBox(
-                      height: 120,
+                      height: 220,
                       child: ListView(
                         scrollDirection: Axis.horizontal,
                         children: [
                           const SizedBox(width: 8),
+                          // choose sample values based on the selected room
+                          // so the same cards show different numbers per room
+                          // (Living Room, Kitchen, Bedroom)
+                          
+                          // compute current room values
+                          (() {
+                            // this closure is immediately invoked to scope vars
+                            final idx = _selectedRoomIndex.clamp(0, _roomSamples.length - 1);
+                            final current = _roomSamples[idx];
+                            final elec = current['electricity'] ?? 0.0;
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                              child: QualityCard(
+                                qualityName: 'Electricity',
+                                qualityIcon: Icons.bolt,
+                                qualityUnit: Settings.instance.energyUnit.split(' ').first,
+                                qualityValue: elec.toStringAsFixed(1),
+                                valueColor: _colorForValue(elec, Settings.instance.electricityThreshold),
+                                onViewDetails: () {
+                                  final rooms = ['Living Room', 'Kitchen', 'Bedroom'];
+                                  final room = rooms[_selectedRoomIndex.clamp(0, rooms.length - 1)];
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) => QualityDetailPage(room: room, quality: 'Electricity')));
+                                },
+                              ),
+                            );
+                          })(),
+                          // Removed duplicate static Electricity card — values come from room samples above.
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                            child: QualityCard(
-                              qualityName: 'Electricity',
-                              qualityIcon: Icons.bolt,
-                              qualityUnit: 'kWh',
-                              qualityValue: '8.6',
-                              onViewDetails: () {
-                                final rooms = ['Living Room', 'Kitchen', 'Bedroom'];
-                                final room = rooms[_selectedRoomIndex.clamp(0, rooms.length - 1)];
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => QualityDetailPage(room: room, quality: 'Electricity')));
-                              },
-                            ),
+                            child: Builder(builder: (context) {
+                              final idx = _selectedRoomIndex.clamp(0, _roomSamples.length - 1);
+                              final current = _roomSamples[idx];
+                              final water = current['water'] ?? 0.0;
+                              return QualityCard(
+                                qualityName: 'Water',
+                                qualityIcon: Icons.water,
+                                qualityUnit: Settings.instance.waterUnit.split(' ').first,
+                                qualityValue: water.round().toString(),
+                                valueColor: _colorForValue(water, Settings.instance.waterThreshold),
+                                onViewDetails: () {
+                                  final rooms = ['Living Room', 'Kitchen', 'Bedroom'];
+                                  final room = rooms[_selectedRoomIndex.clamp(0, rooms.length - 1)];
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) => QualityDetailPage(room: room, quality: 'Water')));
+                                },
+                              );
+                            }),
                           ),
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                            child: QualityCard(
-                              qualityName: 'Water',
-                              qualityIcon: Icons.water,
-                              qualityUnit: 'L',
-                              qualityValue: '120',
-                              onViewDetails: () {
-                                final rooms = ['Living Room', 'Kitchen', 'Bedroom'];
-                                final room = rooms[_selectedRoomIndex.clamp(0, rooms.length - 1)];
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => QualityDetailPage(room: room, quality: 'Water')));
-                              },
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                            child: QualityCard(
-                              qualityName: 'Temperature',
-                              qualityIcon: Icons.thermostat,
-                              qualityUnit: '°C',
-                              qualityValue: '21',
-                              onViewDetails: () {
-                                final rooms = ['Living Room', 'Kitchen', 'Bedroom'];
-                                final room = rooms[_selectedRoomIndex.clamp(0, rooms.length - 1)];
-                                Navigator.push(context, MaterialPageRoute(builder: (_) => QualityDetailPage(room: room, quality: 'Temperature')));
-                              },
-                            ),
+                            child: Builder(builder: (context) {
+                              final idx = _selectedRoomIndex.clamp(0, _roomSamples.length - 1);
+                              final current = _roomSamples[idx];
+                              final temp = current['temperature'] ?? 0.0;
+                              return QualityCard(
+                                qualityName: 'Temperature',
+                                qualityIcon: Icons.thermostat,
+                                qualityUnit: Settings.instance.temperatureUnit.split(' ').first,
+                                qualityValue: temp.toStringAsFixed(1),
+                                valueColor: _colorForValue(temp, Settings.instance.temperatureThreshold),
+                                onViewDetails: () {
+                                  final rooms = ['Living Room', 'Kitchen', 'Bedroom'];
+                                  final room = rooms[_selectedRoomIndex.clamp(0, rooms.length - 1)];
+                                  Navigator.push(context, MaterialPageRoute(builder: (_) => QualityDetailPage(room: room, quality: 'Temperature')));
+                                },
+                              );
+                            }),
                           ),
                           const SizedBox(width: 8),
                         ],

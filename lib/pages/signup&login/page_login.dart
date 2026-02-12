@@ -13,9 +13,11 @@ class LoginPage extends StatefulWidget {
   State<LoginPage> createState() => _LoginPageState();
 }
 
-class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMixin {
+class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
   late AnimationController _animationController;
   late Animation<Offset> _slideAnimation;
+  late AnimationController _swipeController;
+  late Animation<Offset> _swipeAnimation;
   bool _rememberMe = false;
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
@@ -38,6 +40,14 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
       curve: Curves.easeInOutCubic,
     ));
     _animationController.forward();
+    // Horizontal swipe controller (used when transitioning to dashboard)
+    _swipeController = AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _swipeAnimation = Tween<Offset>(begin: Offset.zero, end: const Offset(-1.0, 0.0)).animate(
+      CurvedAnimation(parent: _swipeController, curve: Curves.easeInOut),
+    );
     // debug: show whether this page was opened with showCreated
     debugPrint('LoginPage.initState showCreated=${widget.showCreated}');
 
@@ -60,6 +70,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
   @override
   void dispose() {
     _animationController.dispose();
+    _swipeController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _bannerTimer?.cancel();
@@ -146,8 +157,10 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
             right: 0,
             height: MediaQuery.of(context).size.height * 0.7,
             child: SlideTransition(
-              position: _slideAnimation,
-              child: Container(
+              position: _swipeAnimation,
+              child: SlideTransition(
+                position: _slideAnimation,
+                child: Container(
                 padding: const EdgeInsets.fromLTRB(25.0, 40.0, 25.0, 20.0),
                 decoration: const BoxDecoration(
                   color: Colors.white,
@@ -254,10 +267,21 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                           repo.setLastLoggedInEmail(null);
                         }
 
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(builder: (context) => const DashboardPage()),
+                        // Play horizontal swipe on the current page while the new page slides in
+                        _swipeController.forward();
+
+                        final route = PageRouteBuilder(
+                          transitionDuration: const Duration(milliseconds: 400),
+                          pageBuilder: (context, animation, secondaryAnimation) => const DashboardPage(),
+                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                            final inAnim = Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero).animate(
+                              CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+                            );
+                            return SlideTransition(position: inAnim, child: child);
+                          },
                         );
+
+                        Navigator.pushReplacement(context, route);
                       },
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1EAA83),
@@ -298,6 +322,7 @@ class _LoginPageState extends State<LoginPage> with SingleTickerProviderStateMix
                 ),
               ),
             ),
+          ),
           ),
         ],
       ),
