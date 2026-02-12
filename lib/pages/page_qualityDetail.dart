@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../widgets/widget_realTimeChart.dart';
+import '../widgets/widget_qualityDeviceCard.dart';
 
 class QualityDetailPage extends StatelessWidget {
   final String room;
@@ -9,11 +10,8 @@ class QualityDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    const Color green = Color(0xFF1EAA83);
     return Scaffold(
-      appBar: AppBar(
-        title: Text('$quality — Details'),
-        backgroundColor: const Color(0xFF1EAA83),
-      ),
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -21,7 +19,19 @@ class QualityDetailPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // Top row: back icon aligned left (returns to home)
+                Row(
+                  children: [
+                    IconButton(
+                      icon: const Icon(Icons.arrow_back),
+                      color: green,
+                      onPressed: () => Navigator.pushReplacementNamed(context, '/dashboard'),
+                    ),
+                  ],
+                ),
+
                 // Centered header showing the selected room
+                const SizedBox(height: 6),
                 Center(
                   child: Text(
                     room,
@@ -46,25 +56,22 @@ class QualityDetailPage extends StatelessWidget {
 
                 const SizedBox(height: 8),
 
-                // Placeholder list of devices — real data can be wired later
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.device_hub),
-                    title: Text('$quality sensor 1'),
-                    subtitle: const Text('Online'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {},
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Card(
-                  child: ListTile(
-                    leading: const Icon(Icons.device_hub),
-                    title: Text('$quality sensor 2'),
-                    subtitle: const Text('Offline'),
-                    trailing: const Icon(Icons.chevron_right),
-                    onTap: () {},
-                  ),
+                // Devices list: one device per row
+                Column(
+                  children: List.generate(3, (i) {
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 12.0),
+                      child: QualityDeviceCard(
+                        leftIcon: Icons.device_hub,
+                        rightIcon: Icons.settings,
+                        deviceName: '$quality device ${i + 1}',
+                        deviceCountText: '${(i % 3) + 1} devices',
+                        valueText: (20 + i).toString(),
+                        unitText: 'kW/h',
+                        onTap: () {},
+                      ),
+                    );
+                  }),
                 ),
               ],
             ),

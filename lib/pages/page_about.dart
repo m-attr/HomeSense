@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'page_insights.dart';
-import 'page_notifications.dart';
 import 'page_settings.dart';
 import 'page_editProfile.dart';
 import 'signup&login/page_welcome.dart';
@@ -68,12 +66,7 @@ class _AboutPageState extends State<AboutPage> {
         onAbout: () {
           // already on About - nothing to do
         },
-        onInsights: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const InsightsPage()));
-        },
-        onNotifications: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsPage()));
-        },
+        
         onSettings: () {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
         },

@@ -1,15 +1,13 @@
 import 'package:flutter/material.dart';
 import 'page_about.dart';
-import 'page_insights.dart';
-import 'page_notifications.dart';
 import 'page_settings.dart';
 import 'page_editProfile.dart';
 import 'signup&login/page_welcome.dart';
 import 'page_qualityDetail.dart';
 import '../models/user.dart';
 import '../widgets/widget_qualityCard.dart';
-import '../widgets/widget_realTimeChart.dart';
 import '../widgets/widget_menuDrawer.dart';
+import '../widgets/widget_homeStatusChart.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -86,14 +84,7 @@ class _DashboardPageState extends State<DashboardPage> {
           Navigator.pop(context);
           Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutPage()));
         },
-        onInsights: () {
-          Navigator.pop(context);
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const InsightsPage()));
-        },
-        onNotifications: () {
-          Navigator.pop(context);
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const NotificationsPage()));
-        },
+        
         onSettings: () {
           Navigator.pop(context);
           Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
@@ -135,13 +126,13 @@ class _DashboardPageState extends State<DashboardPage> {
                       'Home Health Score',
                       style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
                     ),),
-                    const SizedBox(height: 18),
-                    // Doughnut score (centered) — no extra horizontal padding applied to this container
-                    Center(child: _DoughnutScore(score: 71)),
+                    const SizedBox(height: 12),
+                    // Doughnut score (centered) — now provided by reusable widget
+                    Center(child: HomeStatusChart(score: 71)),
 
                     // Status container placed inside the green header (inset from the edges)
                     Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
                       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -160,7 +151,7 @@ class _DashboardPageState extends State<DashboardPage> {
                         ],
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 8),
                   ],
                 ),
               ),
@@ -171,7 +162,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    
+
 
                     // Nav bar (full-width within page padding)
                     RoomNavBar(
@@ -315,71 +306,4 @@ class RoomNavBar extends StatelessWidget {
       ),
     );
   }
-}
-
-
-/// Simple doughnut-like score widget. Draws a mostly-complete arc with a missing
-/// bottom segment to give the upside-down, open-bottom look and shows the
-/// numeric score below the curve.
-class _DoughnutScore extends StatelessWidget {
-  final int score;
-  const _DoughnutScore({required this.score});
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 240,
-      height: 200,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          SizedBox(
-            width: 220,
-            height: 160,
-            child: CustomPaint(
-              painter: _DoughnutPainter(),
-            ),
-          ),
-          // Score text centered inside the doughnut
-          Text(
-            '$score',
-            style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.white),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _DoughnutPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width / 2, size.height / 2);
-    final radius = (size.height * 0.9) / 2;
-
-    final Rect rect = Rect.fromCircle(center: center, radius: radius);
-
-    final Paint background = Paint()
-      ..color = Colors.grey.withOpacity(0.12)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 18.0
-      ..strokeCap = StrokeCap.round;
-
-    final Paint arcPaint = Paint()
-      ..color = const Color(0xFFFFC107) // amber hue
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 18.0
-      ..strokeCap = StrokeCap.round;
-
-    // Draw a light background (partial semicircle)
-    canvas.drawArc(rect, -3.14, 3.14, false, background);
-
-    // Draw the accent arc (omit bottom segment by limiting sweep)
-    final double start = -3.14; // start at left
-    final double sweep = 2.6; // less than pi to leave bottom gap
-    canvas.drawArc(rect, start, sweep, false, arcPaint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

@@ -7,8 +7,6 @@ class WidgetMenuDrawer extends StatelessWidget {
   final VoidCallbackNullable onHome;
   final VoidCallbackNullable onProfile;
   final VoidCallbackNullable onAbout;
-  final VoidCallbackNullable onInsights;
-  final VoidCallbackNullable onNotifications;
   final VoidCallbackNullable onSettings;
   final VoidCallbackNullable onLogout;
   final VoidCallbackNullable onChangeProfileImage;
@@ -18,8 +16,6 @@ class WidgetMenuDrawer extends StatelessWidget {
     this.onHome,
     this.onProfile,
     this.onAbout,
-    this.onInsights,
-    this.onNotifications,
     this.onSettings,
     this.onLogout,
     this.onChangeProfileImage,
@@ -29,7 +25,7 @@ class WidgetMenuDrawer extends StatelessWidget {
   Widget build(BuildContext context) {
     final repo = UserRepository.instance;
     final user = repo.currentUser;
-    final placeholder = const AssetImage('images/homesense-logo.png');
+    final placeholder = const AssetImage('images/nyp-logo.png');
     final imageProvider = (user?.profileImage != null && user!.profileImage!.isNotEmpty)
         ? (user.profileImage!.startsWith('http') ? NetworkImage(user.profileImage!) : AssetImage(user.profileImage!)) as ImageProvider
         : placeholder;
@@ -39,7 +35,7 @@ class WidgetMenuDrawer extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           Container(
-            height: 220,
+            height: 180,
             color: const Color(0xFF1EAA83),
             padding: const EdgeInsets.fromLTRB(16.0, 24.0, 16.0, 8.0),
             child: Align(
@@ -110,22 +106,6 @@ class WidgetMenuDrawer extends StatelessWidget {
             onTap: () {
               Navigator.pop(context);
               if (onAbout != null) onAbout!();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.show_chart),
-            title: const Text('Insights'),
-            onTap: () {
-              Navigator.pop(context);
-              if (onInsights != null) onInsights!();
-            },
-          ),
-          ListTile(
-            leading: const Icon(Icons.notifications),
-            title: const Text('Notifications'),
-            onTap: () {
-              Navigator.pop(context);
-              if (onNotifications != null) onNotifications!();
             },
           ),
           ListTile(

@@ -1,10 +1,11 @@
 class User {
+  // required
   String fullName;
   String email;
   String password;
 
-  // Optional profile fields
-  String? profileImage; // path or url
+  // optional
+  String? profileImage; 
   String? location;
   String? phoneNumber;
   String? gender;
@@ -27,12 +28,8 @@ class UserRepository {
   User? currentUser;
   String? lastLoggedInEmail;
 
+  // preset for easier login during testing
   UserRepository._privateConstructor() {
-    // Seed a demo user so you can log in without signing up.
-    // Credentials:
-    //  email: demo@homesense.test
-    //  password: DemoPass123
-    // Feel free to change these or remove the seed in production.
     _users.add(User(
       fullName: 'Matt',
       email: '1007mattansel@gmail.com',
