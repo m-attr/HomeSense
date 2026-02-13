@@ -79,7 +79,6 @@ class _RealTimeChartState extends State<RealTimeChart> {
                 ),
                 const SizedBox(height: spacing),
 
-                // Rounded white chart container (the white border requested)
                 Container(
                   height: chartH,
                   decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
@@ -91,7 +90,6 @@ class _RealTimeChartState extends State<RealTimeChart> {
                 ),
                 const SizedBox(height: spacing),
 
-                // Labels row (adapt to number of labels)
                 SizedBox(
                   height: labelH,
                   child: Row(

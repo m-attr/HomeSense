@@ -13,7 +13,6 @@ class WelcomePage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Banner centered
             SizedBox(
               height: 220,
               width: MediaQuery.of(context).size.width * 0.9,
@@ -25,7 +24,6 @@ class WelcomePage extends StatelessWidget {
 
             const SizedBox(height: 24),
 
-            // Buttons beneath the banner with margin
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Row(

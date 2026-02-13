@@ -302,7 +302,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                       onChanged: (v) {
                                         if (v == null) return;
                                         setState(() => _electricityTarget = v);
-                                        // Update shared settings immediately for preset values
+
                                         if (v != 'Custom') {
                                           Settings.instance.setElectricityThresholdFromLabel(v);
                                         }

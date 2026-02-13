@@ -21,7 +21,6 @@ class User {
   });
 }
 
-/// Simple in-memory repository for demo purposes.
 class UserRepository {
   static final UserRepository instance = UserRepository._privateConstructor();
   final List<User> _users = [];

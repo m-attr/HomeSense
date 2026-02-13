@@ -36,7 +36,6 @@ class QualityDeviceCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Row 1: two icons
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -45,8 +44,6 @@ class QualityDeviceCard extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-
-                // Row 2: device name and count
                 Row(
                   children: [
                     Expanded(
@@ -66,7 +63,6 @@ class QualityDeviceCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 12),
 
-                // Row 3: big value and unit
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
