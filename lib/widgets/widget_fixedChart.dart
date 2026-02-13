@@ -62,7 +62,7 @@ class _RealTimeChartState extends State<RealTimeChart> {
                         value: _period,
                         underline: const SizedBox.shrink(),
                         dropdownColor: Colors.white,
-                        style: const TextStyle(color: Colors.white),
+                        style: const TextStyle(color: Colors.black),
                         iconEnabledColor: Colors.white,
                         items: const [
                           DropdownMenuItem(value: ChartPeriod.week, child: Text('Week')),
@@ -194,7 +194,7 @@ class _CubicLineChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false; // no data, no repaint needed
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false; // no data, no repa
 }
 
 
