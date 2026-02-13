@@ -37,6 +37,7 @@ class Settings {
 
   void setTemperatureThreshold(double value) => temperatureThreshold = value;
 
+  // parse input
   double? _extractLeadingNumber(String s) {
     final reg = RegExp(r'[0-9]+(?:\.[0-9]+)?');
     final m = reg.firstMatch(s);

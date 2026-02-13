@@ -16,6 +16,7 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
 
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmController = TextEditingController();
 
@@ -39,6 +40,7 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
     _animationController.dispose();
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     _passwordController.dispose();
     _confirmController.dispose();
     super.dispose();
@@ -65,6 +67,8 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
 
     final name = _nameController.text.trim();
     final email = _emailController.text.trim();
+    final phoneRaw = _phoneController.text.trim();
+    final phone = phoneRaw.isEmpty ? null : phoneRaw;
     final password = _passwordController.text;
     final confirm = _confirmController.text;
 
@@ -76,6 +80,15 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
     if (!_isEmailValid(email)) {
       setState(() => _errorMessage = 'Please enter a valid email address.');
       return;
+    }
+
+    if (phone != null && phone.isNotEmpty) {
+      final cleaned = phone.replaceAll(RegExp(r'[^0-9]'), '');
+      final phPattern = RegExp(r'^[89][0-9]{7}$');
+      if (!phPattern.hasMatch(cleaned)) {
+        setState(() => _errorMessage = 'Phone must be 8 digits and start with 8 or 9');
+        return;
+      }
     }
 
     if (!_isPasswordValid(password)) {
@@ -94,7 +107,7 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
       return;
     }
 
-    final newUser = User(fullName: name, email: email, password: password);
+    final newUser = User(fullName: name, email: email, password: password, phoneNumber: phone);
     repo.addUser(newUser);
 
     _animationController.reverse().then((_) {
@@ -154,6 +167,12 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
                       decoration: InputDecoration(labelText: 'Email', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                    ),
+                    const SizedBox(height: 10),
+                    TextField(
+                      controller: _phoneController,
+                      keyboardType: TextInputType.phone,
+                      decoration: InputDecoration(labelText: 'Phone (optional)', hintText: '8 digits, starts with 8 or 9', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
                     ),
                     const SizedBox(height: 10),
                     TextField(

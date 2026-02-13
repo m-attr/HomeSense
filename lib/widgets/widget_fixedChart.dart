@@ -36,6 +36,7 @@ class _RealTimeChartState extends State<RealTimeChart> {
 
       final double chartH = (totalH - (outerPadding * 2) - innerVPad * 2 - headerH - labelH - spacing * 2).clamp(40.0, 1000.0);
 
+      // choose data/labels by period and select the appropriate lists on _period
       final List<double> data = (_period == ChartPeriod.week) ? _weekData : (_period == ChartPeriod.month ? _monthData : _yearData);
       final List<String> labels = (_period == ChartPeriod.week) ? _weekLabels : (_period == ChartPeriod.month ? _monthLabels : _yearLabels);
 
@@ -47,7 +48,7 @@ class _RealTimeChartState extends State<RealTimeChart> {
           child: SizedBox(
             height: totalH - outerPadding * 2,
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+              crossAxisAlignment: CrossAxisAlignment.stretch, // stretch children to full width
               children: [
                 SizedBox(
                   height: headerH,
@@ -107,6 +108,7 @@ class _RealTimeChartState extends State<RealTimeChart> {
   }
 }
 
+// draws the cubic line and fills area beneath
 class _CubicLineChartPainter extends CustomPainter {
   final List<double> data;
 
@@ -116,7 +118,7 @@ class _CubicLineChartPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     if (data.isEmpty) return;
 
-    final double left = 8.0, right = 8.0, top = 6.0, bottom = 6.0;
+    final double left = 8.0, right = 8.0, top = 6.0, bottom = 6.0; // margins
     final chartW = size.width - left - right;
     final chartH = size.height - top - bottom;
     if (chartW <= 0 || chartH <= 0) return;
@@ -144,8 +146,9 @@ class _CubicLineChartPainter extends CustomPainter {
       ..strokeJoin = StrokeJoin.round;
     final Paint dotPaint = Paint()..color = lineColor;
 
-    final Path path = _catmullRomToPath(points);
+    final Path path = _catmullRomToPath(points); // generate smooth path using funciton 
 
+    // fill area under curve after closing the bottom
     final Path fillPath = Path.from(path);
     fillPath.lineTo(left + chartW, top + chartH);
     fillPath.lineTo(left, top + chartH);
@@ -158,6 +161,7 @@ class _CubicLineChartPainter extends CustomPainter {
     canvas.drawCircle(last, 5.0, dotPaint);
   }
 
+  // helper method to convert points to cubic path
   Path _catmullRomToPath(List<Offset> pts) {
     final Path path = Path();
     if (pts.isEmpty) return path;
@@ -190,7 +194,7 @@ class _CubicLineChartPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false; // no data, no repaint needed
 }
 
 

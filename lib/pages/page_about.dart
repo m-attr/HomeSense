@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class AboutPage extends StatefulWidget {
   const AboutPage({super.key});
@@ -13,6 +14,43 @@ class _AboutPageState extends State<AboutPage> {
   static const String _companyEmail = 'support@homesense.co';
   static const String _developerName = 'HomeSense Dev';
   static const String _developerEmail = 'dev@homesense.co';
+
+  Future<void> _launchPhone() async {
+    final uri = Uri(scheme: 'tel', path: _companyPhone);
+    try {
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unable to open dialer')));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error opening dialer')));
+    }
+  }
+
+  Future<void> _launchEmail() async {
+    // Try to open Gmail explicitly on Android if available, otherwise fall back to mailto
+    final gmailUri = Uri.parse('googlegmail://co?to=$_companyEmail');
+    final mailtoUri = Uri(
+      scheme: 'mailto',
+      path: _companyEmail,
+      query: Uri(queryParameters: {'subject': 'HomeSense Support'}).query,
+    );
+
+    try {
+      if (await canLaunchUrl(gmailUri)) {
+        await launchUrl(gmailUri);
+        return;
+      }
+      if (await canLaunchUrl(mailtoUri)) {
+        await launchUrl(mailtoUri);
+        return;
+      }
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unable to open email client')));
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error opening email client')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -100,27 +138,33 @@ class _AboutPageState extends State<AboutPage> {
                             Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Row(
-                                  children: [
-                                    const Icon(Icons.phone, color: Color(0xFFFFFFFF)),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text('Phone: $_companyPhone', style: const TextStyle(color: Colors.white, fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                    ),
-                                  ],
+                                GestureDetector(
+                                  onTap: _launchPhone,
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.phone, color: Color(0xFFFFFFFF)),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text('Phone: $_companyPhone', style: const TextStyle(color: Colors.white, fontSize: 16, decoration: TextDecoration.underline), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text('Call us for support', style: TextStyle(color: Colors.white70, fontSize: 14)),
                                 const SizedBox(height: 12),
 
-                                Row(
-                                  children: [
-                                    const Icon(Icons.email, color: Color(0xFFFFFFFF)),
-                                    const SizedBox(width: 8),
-                                    Expanded(
-                                      child: Text('Email: $_companyEmail', style: const TextStyle(color: Colors.white, fontSize: 16), maxLines: 1, overflow: TextOverflow.ellipsis),
-                                    ),
-                                  ],
+                                GestureDetector(
+                                  onTap: _launchEmail,
+                                  child: Row(
+                                    children: [
+                                      const Icon(Icons.email, color: Color(0xFFFFFFFF)),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text('Email: $_companyEmail', style: const TextStyle(color: Colors.white, fontSize: 16, decoration: TextDecoration.underline), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                                 const SizedBox(height: 4),
                                 Text('Send feedback or report an issue', style: TextStyle(color: Colors.white70, fontSize: 14)),

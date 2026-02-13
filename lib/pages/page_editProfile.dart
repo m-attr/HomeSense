@@ -43,7 +43,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.dispose();
   }
 
-  // Profile image is displayed but not editable from this page.
 
   void _saveProfile() {
     if (!(_formKey.currentState?.validate() ?? false)) return;
@@ -51,6 +50,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     final repo = UserRepository.instance;
     final user = repo.currentUser;
     if (user == null) {
+      // dispaly message no user logged in 
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('No user is logged in')));
       return;
     }
@@ -111,7 +111,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
   @override
   Widget build(BuildContext context) {
-    // Profile image removed from edit page — display is handled elsewhere.
 
     return Scaffold(
       body: SafeArea(
@@ -122,7 +121,6 @@ class _EditProfilePageState extends State<EditProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-              // Custom top-left back control (replaces AppBar)
             Align(
               alignment: Alignment.centerLeft,
               child: TextButton.icon(
@@ -166,10 +164,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
               decoration: InputDecoration(hintText: UserRepository.instance.currentUser?.phoneNumber ?? 'Enter phone number', border: OutlineInputBorder(borderRadius: BorderRadius.circular(8))),
               keyboardType: TextInputType.phone,
               validator: (v) {
-                if (v == null || v.trim().isEmpty) return null; // optional
-                final cleaned = v.replaceAll(RegExp(r'[\s\-\(\)]'), '');
-                final pattern = RegExp('^\\+?[0-9]{7,15}\$');
-                if (!pattern.hasMatch(cleaned)) return 'Enter a valid phone number';
+                if (v == null || v.trim().isEmpty) return null;
+                final cleaned = v.replaceAll(RegExp(r'[^0-9]'), '');
+                final pattern = RegExp(r'^[89][0-9]{7}$');
+                if (!pattern.hasMatch(cleaned)) return 'Phone must be 8 digits and start with 8 or 9';
                 return null;
               },
             ),

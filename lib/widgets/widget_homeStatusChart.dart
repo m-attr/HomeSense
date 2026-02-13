@@ -37,7 +37,7 @@ class _HomeStatusChartState extends State<HomeStatusChart> with SingleTickerProv
   @override
   void didUpdateWidget(covariant HomeStatusChart oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.score != widget.score) {
+    if (oldWidget.score != widget.score) { // if score changes
       final double newTarget = (widget.score.clamp(0, 100) / 100.0) * 3.14;
       _animation = Tween<double>(begin: 0.0, end: newTarget).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic));
       _controller
@@ -82,6 +82,8 @@ class _HomeStatusChartState extends State<HomeStatusChart> with SingleTickerProv
   }
 }
 
+
+// paints the item
 class _HomeStatusPainter extends CustomPainter {
   final double sweep; // radians of yellow arc
   _HomeStatusPainter({required this.sweep});
@@ -123,7 +125,7 @@ class _HomeStatusPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round;
       canvas.drawArc(rect, gapStart, gapSweep, false, gapCover);
 
-      // Draw a subtle border around the white gap to make the edge visible
+      // draw a subtle border around the white gap to make the edge visible
       final Paint gapBorder = Paint()
         ..color = Colors.grey.withOpacity(0.5)
         ..style = PaintingStyle.stroke
