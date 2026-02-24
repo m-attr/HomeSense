@@ -14,6 +14,28 @@ class _SettingsPageState extends State<SettingsPage> {
   String _waterUnit = 'Litres (L)';
   String _temperatureUnit = '°C (Celsius)';
 
+  static const List<String> _energyOptions = [
+    'kWh (Kilowatt-hour)',
+    'Wh (Watt-hour)',
+  ];
+  static const List<String> _waterOptions = [
+    'Litres (L)',
+    'Cubic Metres (m³)',
+  ];
+  static const List<String> _temperatureOptions = [
+    '°C (Celsius)',
+    '°F (Fahrenheit)',
+  ];
+
+  @override
+  void initState() {
+    super.initState();
+    final s = Settings.instance;
+    _energyUnit = _energyOptions.contains(s.energyUnit) ? s.energyUnit : _energyOptions[0];
+    _waterUnit = _waterOptions.contains(s.waterUnit) ? s.waterUnit : _waterOptions[0];
+    _temperatureUnit = _temperatureOptions.contains(s.temperatureUnit) ? s.temperatureUnit : _temperatureOptions[0];
+  }
+
   // Comfort targets (selections)
   String _electricityTarget = '10 kWh (Average Household)';
   String _waterUsageTarget = '150 L (Average)';

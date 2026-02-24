@@ -47,7 +47,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     _swipeAnimation = Tween<Offset>(begin: Offset.zero, end: const Offset(-1.0, 0.0)).animate(
       CurvedAnimation(parent: _swipeController, curve: Curves.easeInOut),
     );
-    // debug: show whether this page was opened with showCreated
     debugPrint('LoginPage.initState showCreated=${widget.showCreated}');
 
     _showCreatedBanner = widget.showCreated;
@@ -57,7 +56,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       });
     }
 
-    // prefill email if user previously chose "Remember Me"
     final repo = UserRepository.instance;
     if (repo.lastLoggedInEmail != null) {
       _emailController.text = repo.lastLoggedInEmail!;
@@ -95,7 +93,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return Scaffold(
       body: Stack(
         children: [
-          // Top banner (signup success)
           if (_showCreatedBanner)
             Positioned(
               top: _bannerTop,
@@ -107,29 +104,24 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
-                    border: Border(left: BorderSide(color: Colors.green.shade200, width: 6)),
+                    border: Border(left: BorderSide(color: const Color(0xFF1EAA83), width: 6)),
                     boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6)],
                   ),
                   padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
                   child: Row(
                     children: [
                       Expanded(child: Text('User has been created.', style: TextStyle(color: Colors.black87))),
-                      IconButton(
-                        icon: const Icon(Icons.close, size: 20),
-                        onPressed: _dismissCreatedBanner,
-                      ),
+                      IconButton(icon: const Icon(Icons.close, size: 20), onPressed: _dismissCreatedBanner),
                     ],
                   ),
                 ),
               ),
             ),
 
-          // Background
           Container(
             color: const Color(0xFF1EAA83),
           ),
 
-          // Top-left back control (icon + 'Back') — navigates to WelcomePage
           Positioned(
             top: 40,
             left: 8,
@@ -147,7 +139,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             ),
           ),
 
-          // Form at the bottom with slide animation
           Positioned(
             bottom: 0,
             left: 0,
@@ -158,158 +149,150 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               child: SlideTransition(
                 position: _slideAnimation,
                 child: Container(
-                padding: const EdgeInsets.fromLTRB(25.0, 40.0, 25.0, 20.0),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(40.0),
-                    topRight: Radius.circular(40.0),
+                  padding: const EdgeInsets.fromLTRB(25.0, 40.0, 25.0, 20.0),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.only(
+                      topLeft: Radius.circular(40.0),
+                      topRight: Radius.circular(40.0),
+                    ),
+                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
                   ),
-                  boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Center(
-                      child: Text(
-                        'Welcome Back',
-                        style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1EAA83)),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Email field
-                    TextField(
-                      controller: _emailController,
-                      keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(
-                        labelText: 'Email',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Center(
+                        child: Text(
+                          'Welcome Back',
+                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1EAA83)),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 10),
+                      const SizedBox(height: 20),
 
-                    // Password field
-                    TextField(
-                      controller: _passwordController,
-                      obscureText: true,
-                      decoration: InputDecoration(
-                        labelText: 'Password',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-
-                    // Remember Me and Forget Password row
-                    Row(
-                      children: [
-                        Row(
-                          children: [
-                            Checkbox(
-                              value: _rememberMe,
-                              onChanged: (v) {
-                                setState(() {
-                                  _rememberMe = v ?? false;
-                                });
-                              },
-                            ),
-                            const Text('Remember Me'),
-                          ],
-                        ),
-                      ],
-                    ),
-
-                    const SizedBox(height: 8),
-
-                    ElevatedButton(
-                      onPressed: () {
-                        // Handle sign in logic here
-                        setState(() {
-                          _errorMessage = null;
-                        });
-
-                        final email = _emailController.text.trim();
-                        final password = _passwordController.text;
-
-                        if (email.isEmpty || password.isEmpty) {
-                          setState(() => _errorMessage = 'Email and password are required.');
-                          return;
-                        }
-
-                        final repo = UserRepository.instance;
-                        if (!repo.validateCredentials(email, password)) {
-                          setState(() => _errorMessage = 'Invalid email or password.');
-                          return;
-                        }
-
-                        // Set current user and remember email if requested
-                        repo.currentUser = repo.findByEmail(email);
-                        if (_rememberMe) {
-                          repo.setLastLoggedInEmail(email);
-                        } else {
-                          repo.setLastLoggedInEmail(null);
-                        }
-
-                        // Play horizontal swipe on the current page while the new page slides in
-                        _swipeController.forward();
-
-                        final route = PageRouteBuilder(
-                          transitionDuration: const Duration(milliseconds: 400),
-                          pageBuilder: (context, animation, secondaryAnimation) => const DashboardPage(),
-                          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                            final inAnim = Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero).animate(
-                              CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-                            );
-                            return SlideTransition(position: inAnim, child: child);
-                          },
-                        );
-
-                        Navigator.pushReplacement(context, route);
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF1EAA83),
-                        minimumSize: const Size(double.infinity, 50),
-                      ),
-                      child: const Text('Log in', style: TextStyle(color: Colors.white),),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    if (_errorMessage != null) ...[
-                      Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
-                      const SizedBox(height: 8),
-                    ],
-
-                    // Small grey text with clickable 'Sign up' / toggle to signup
-                    Center(
-                      child: GestureDetector(
-                        onTap: () {
-                          // animate down then go to signup
-                          _navigateTo(const SignupPage());
-                        },
-                        child: RichText(
-                          text: TextSpan(
-                            text: "Don't have an account? ",
-                            style: TextStyle(color: Colors.grey.shade600),
-                            children: [
-                              TextSpan(
-                                text: 'Sign up',
-                                style: const TextStyle(color: Color(0xFF1EAA83)),
-                              ),
-                            ],
+                      TextField(
+                        controller: _emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        decoration: InputDecoration(
+                          labelText: 'Email',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
                           ),
                         ),
                       ),
-                    ),
-                  ],
+                      const SizedBox(height: 10),
+
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: true,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      Row(
+                        children: [
+                          Row(
+                            children: [
+                              Checkbox(
+                                value: _rememberMe,
+                                onChanged: (v) {
+                                  setState(() {
+                                    _rememberMe = v ?? false;
+                                  });
+                                },
+                              ),
+                              const Text('Remember Me'),
+                            ],
+                          ),
+                        ],
+                      ),
+
+                      const SizedBox(height: 8),
+
+                      ElevatedButton(
+                        onPressed: () {
+                          setState(() {
+                            _errorMessage = null;
+                          });
+
+                          final email = _emailController.text.trim();
+                          final password = _passwordController.text;
+
+                          if (email.isEmpty || password.isEmpty) {
+                            setState(() => _errorMessage = 'Email and password are required.');
+                            return;
+                          }
+
+                          final repo = UserRepository.instance;
+                          if (!repo.validateCredentials(email, password)) {
+                            setState(() => _errorMessage = 'Invalid email or password.');
+                            return;
+                          }
+
+                          repo.currentUser = repo.findByEmail(email);
+                          if (_rememberMe) {
+                            repo.setLastLoggedInEmail(email);
+                          } else {
+                            repo.setLastLoggedInEmail(null);
+                          }
+
+                          _swipeController.forward();
+
+                          final route = PageRouteBuilder(
+                            transitionDuration: const Duration(milliseconds: 400),
+                            pageBuilder: (context, animation, secondaryAnimation) => const DashboardPage(),
+                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+                              final inAnim = Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero).animate(
+                                CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+                              );
+                              return SlideTransition(position: inAnim, child: child);
+                            },
+                          );
+
+                          Navigator.pushReplacement(context, route);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF1EAA83),
+                          minimumSize: const Size(double.infinity, 50),
+                        ),
+                        child: const Text('Log in', style: TextStyle(color: Colors.white),),
+                      ),
+
+                      const SizedBox(height: 12),
+
+                      if (_errorMessage != null) ...[
+                        Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                        const SizedBox(height: 8),
+                      ],
+
+                      Center(
+                        child: GestureDetector(
+                          onTap: () {
+                            _navigateTo(const SignupPage());
+                          },
+                          child: RichText(
+                            text: TextSpan(
+                              text: "Don't have an account? ",
+                              style: TextStyle(color: Colors.grey.shade600),
+                              children: [
+                                TextSpan(
+                                  text: 'Sign up',
+                                  style: const TextStyle(color: Color(0xFF1EAA83)),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-          ),
           ),
         ],
       ),

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'page_about.dart';
 import 'page_settings.dart';
@@ -19,6 +20,8 @@ class DashboardPage extends StatefulWidget {
 
 class _DashboardPageState extends State<DashboardPage> {
   int _selectedRoomIndex = 0;
+  bool _showWelcomeBanner = false;
+  Timer? _welcomeTimer;
 
   Color? _colorForValue(double value, double threshold) {
     if (threshold <= 0) return Color(0xFF1EAA83);
@@ -119,11 +122,13 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
 
       backgroundColor: Colors.white,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
+      body: Stack(
+        children: [
+          SafeArea(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
               Container(
                 width: double.infinity,
                 decoration: const BoxDecoration(
@@ -149,7 +154,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
                  
                     Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 0.0),
+                      margin: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 0.0),
                       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -286,8 +291,67 @@ class _DashboardPageState extends State<DashboardPage> {
             ],
           ),
         ),
+          ),
+
+          // transient welcome banner shown at top for a few seconds
+          if (_showWelcomeBanner)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 12,
+              left: 16,
+              right: 16,
+              child: Material(
+                color: Colors.transparent,
+                child: AnimatedOpacity(
+                  opacity: _showWelcomeBanner ? 1.0 : 0.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border(left: BorderSide(color: const Color(0xFF1EAA83), width: 6)),
+                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6)],
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Welcome back, ${UserRepository.instance.currentUser?.fullName ?? ''}',
+                            style: const TextStyle(color: Colors.black87, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // show welcome banner briefly if a user is already logged in
+    final repo = UserRepository.instance;
+    if (repo.currentUser != null) {
+      // schedule showing shortly after build
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        setState(() => _showWelcomeBanner = true);
+        _welcomeTimer = Timer(const Duration(seconds: 3), () {
+          if (mounted) setState(() => _showWelcomeBanner = false);
+        });
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _welcomeTimer?.cancel();
+    super.dispose();
   }
 }
 
