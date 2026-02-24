@@ -107,7 +107,7 @@ class _RealTimeChartState extends State<RealTimeChart> {
                               Positioned.fill(
                                 child: Container(
                                   decoration: BoxDecoration(
-                                    color: Colors.yellowAccent.withOpacity(0.35),
+                                    color: Colors.yellowAccent.withAlpha((0.35 * 255).round()),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                 ),
@@ -118,7 +118,7 @@ class _RealTimeChartState extends State<RealTimeChart> {
                                 child: Container(
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.85),
+                                    color: Colors.red.withAlpha((0.85 * 255).round()),
                                     borderRadius: BorderRadius.circular(6),
                                   ),
                                   child: const Text('VISUAL TEST', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
@@ -135,9 +135,9 @@ class _RealTimeChartState extends State<RealTimeChart> {
                             Positioned(
                               top: 6,
                               left: 6,
-                              child: Container(
+                                child: Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                decoration: BoxDecoration(color: Colors.white.withOpacity(0.85), borderRadius: BorderRadius.circular(4)),
+                                decoration: BoxDecoration(color: Colors.white.withAlpha((0.85 * 255).round()), borderRadius: BorderRadius.circular(4)),
                                 child: Text('pts:${data.length} h:${chartH.toStringAsFixed(0)} w:${constraints.maxWidth.toStringAsFixed(0)}', style: const TextStyle(fontSize: 11, color: Colors.black87)),
                               ),
                             ),
@@ -198,7 +198,7 @@ class _CubicLineChartPainter extends CustomPainter {
 
     // draw Y-axis dotted grid lines and labels
     final gridPaint = Paint()
-      ..color = Colors.grey.withOpacity(0.5)
+      ..color = Colors.grey.withAlpha((0.5 * 255).round())
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.0;
 
@@ -230,7 +230,7 @@ class _CubicLineChartPainter extends CustomPainter {
     }
 
     const Color lineColor = Color(0xFF0B7A4A); // darker green
-    final Color fillColor = lineColor.withOpacity(0.12);
+    final Color fillColor = lineColor.withAlpha((0.12 * 255).round());
 
     final Paint fillPaint = Paint()..color = fillColor..style = PaintingStyle.fill;
     final Paint linePaint = Paint()
@@ -245,7 +245,7 @@ class _CubicLineChartPainter extends CustomPainter {
 
     // draw a more visible solid border for debugging/visibility
     final borderPaint = Paint()
-      ..color = Colors.black.withOpacity(0.7)
+      ..color = Colors.black.withAlpha((0.7 * 255).round())
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0;
     canvas.drawRect(Rect.fromLTWH(left, top, chartW, chartH), borderPaint);
@@ -262,7 +262,7 @@ class _CubicLineChartPainter extends CustomPainter {
     // fallback: draw raw polyline on top to ensure visibility if smoothing misbehaves
     if (points.length >= 2) {
       final Paint rawPaint = Paint()
-        ..color = Colors.red.withOpacity(1.0)
+        ..color = Colors.red
         ..style = PaintingStyle.stroke
         ..strokeWidth = 3.0;
       final Path raw = Path();

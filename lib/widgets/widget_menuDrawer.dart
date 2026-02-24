@@ -78,7 +78,7 @@ class WidgetMenuDrawer extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     user?.email ?? '',
-                    style: TextStyle(color: Colors.white.withOpacity(0.9)),
+                    style: TextStyle(color: Colors.white.withAlpha((0.9 * 255).round())),
                   ),
                 ],
               ),

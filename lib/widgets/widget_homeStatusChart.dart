@@ -82,7 +82,7 @@ class _HomeStatusChartState extends State<HomeStatusChart> with TickerProviderSt
   @override
   Widget build(BuildContext context) {
     final double width = widget.width;
-    final double height = widget.height;
+    // final double height = widget.height;
     final double bgSweep = _bgAnimation.value;
     final double yellowSweep = _yellowAnimation.value;
 

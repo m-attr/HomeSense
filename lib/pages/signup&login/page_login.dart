@@ -93,31 +93,6 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return Scaffold(
       body: Stack(
         children: [
-          if (_showCreatedBanner)
-            Positioned(
-              top: _bannerTop,
-              left: 16,
-              right: 16,
-              child: Material(
-                color: Colors.transparent,
-                child: Container(
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border(left: BorderSide(color: const Color(0xFF1EAA83), width: 6)),
-                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6)],
-                  ),
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
-                  child: Row(
-                    children: [
-                      Expanded(child: Text('User has been created.', style: TextStyle(color: Colors.black87))),
-                      IconButton(icon: const Icon(Icons.close, size: 20), onPressed: _dismissCreatedBanner),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
           Container(
             color: const Color(0xFF1EAA83),
           ),
@@ -294,6 +269,36 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
               ),
             ),
           ),
+
+          // draw banner last so it appears on top of other stack children
+          if (_showCreatedBanner)
+            Positioned(
+              top: _bannerTop,
+              left: 16,
+              right: 16,
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(10),
+                    // use the same green-accent used across the app for consistency
+                    border: Border(left: BorderSide(color: const Color(0xFF1EAA83), width: 6)),
+                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6)],
+                  ),
+                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  child: Row(
+                    children: [
+                      const Expanded(child: Text('User has been created.', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600))),
+                      IconButton(
+                        icon: const Icon(Icons.close, size: 20),
+                        onPressed: _dismissCreatedBanner,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );

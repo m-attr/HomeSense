@@ -31,11 +31,11 @@ class UserRepository {
   UserRepository._privateConstructor() {
     _users.add(User(
       fullName: 'Matt',
-      email: '1007mattansel@gmail.com',
-      password: 'Mattansel01',
+      email: '1',
+      password: '1',
       profileImage: null,
       location: 'Home',
-      phoneNumber: '+441234567890',
+      phoneNumber: '12347890',
       gender: 'Prefer not to say',
     ));
   }

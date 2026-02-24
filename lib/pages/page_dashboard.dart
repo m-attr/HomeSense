@@ -107,9 +107,12 @@ class _DashboardPageState extends State<DashboardPage> {
           Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutPage()));
         },
         
-        onSettings: () {
+        onSettings: () async {
           Navigator.pop(context);
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
+          await Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
+          // Rebuild dashboard so converted unit values are reflected immediately
+          if (!mounted) return;
+          setState(() {});
         },
         onLogout: () {
           final repo = UserRepository.instance;

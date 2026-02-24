@@ -177,7 +177,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             const Text('Gender', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
-              value: _genderOptions.contains(_gender) ? _gender : null,
+              initialValue: _genderOptions.contains(_gender) ? _gender : null,
               items: _genderOptions.map((g) => DropdownMenuItem(value: g, child: Text(g))).toList(),
               onChanged: (v) => setState(() => _gender = v),
               decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14)),
@@ -188,7 +188,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             const Text('Location', style: TextStyle(fontWeight: FontWeight.bold)),
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
-              value: _locationOptions.contains(_location) ? _location : null,
+              initialValue: _locationOptions.contains(_location) ? _location : null,
               items: _locationOptions.map((l) => DropdownMenuItem(value: l, child: Text(l))).toList(),
               onChanged: (v) => setState(() => _location = v),
               decoration: const InputDecoration(border: OutlineInputBorder(), contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 14)),
