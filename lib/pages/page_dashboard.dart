@@ -22,6 +22,7 @@ class _DashboardPageState extends State<DashboardPage> {
   int _selectedRoomIndex = 0;
   bool _showWelcomeBanner = false;
   Timer? _welcomeTimer;
+  bool _showStatusPopup = false;
 
   Color? _colorForValue(double value, double threshold) {
     if (threshold <= 0) return Color(0xFF1EAA83);
@@ -49,6 +50,7 @@ class _DashboardPageState extends State<DashboardPage> {
       'temperature': 20.0,
     },
   ];
+
   void _changeProfileImage(BuildContext context) async {
     final repo = UserRepository.instance;
     final current = repo.currentUser;
@@ -81,19 +83,46 @@ class _DashboardPageState extends State<DashboardPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         backgroundColor: const Color(0xFF1EAA83),
         foregroundColor: Colors.white,
         elevation: 0,
-        leading: Builder(
-          builder: (context) => IconButton(
-            icon: const Icon(Icons.menu),
-            onPressed: () => Scaffold.of(context).openDrawer(),
+        titleSpacing: 0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(bottom: Radius.circular(10)),
+        ),
+        title: Padding(
+          padding: const EdgeInsets.only(left: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.wb_sunny, color: Colors.amberAccent),
+                  SizedBox(width: 6),
+                  Text('28\u00B0', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                ],
+              ),
+              SizedBox(height: 2),
+              Text("Today's Weather", style: TextStyle(color: Colors.white70, fontSize: 12)),
+            ],
           ),
         ),
-        actions: [],
+        actions: [
+          Builder(builder: (context) => IconButton(
+            icon: const Icon(Icons.menu, size: 34),
+            iconSize: 32,
+            padding: const EdgeInsets.all(12),
+            onPressed: () => Scaffold.of(context).openEndDrawer(),
+            color: Colors.white,
+            tooltip: 'Menu',
+          )),
+        ],
       ),
 
-      drawer: WidgetMenuDrawer(
+      endDrawer: WidgetMenuDrawer(
         onHome: () {
           Navigator.pop(context);
           Navigator.pushReplacementNamed(context, '/dashboard');
@@ -134,22 +163,22 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: [
               Container(
                 width: double.infinity,
-                decoration: const BoxDecoration(
-                  color: Color(0xFF1EAA83),
-                  borderRadius: BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
-                  ),
-                ),
-
                 padding: const EdgeInsets.only(top: 12.0),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    bottomLeft: Radius.circular(16),
+                    bottomRight: Radius.circular(16),
+                  ),
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
                     const SizedBox(height: 6),
                     const Center(child: Text(
                       'Home Health Score',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.white),
+                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
                     ),),
                     const SizedBox(height: 6),
 
@@ -157,7 +186,7 @@ class _DashboardPageState extends State<DashboardPage> {
 
                  
                     Container(
-                      margin: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 0.0),
+                      margin: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 24),
                       padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
                       decoration: BoxDecoration(
                         color: Colors.white,
@@ -167,27 +196,51 @@ class _DashboardPageState extends State<DashboardPage> {
                           left: BorderSide(width: 8.0, color: const Color(0xFFFFC107)),
                         ),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
-                          Text('Status: Below Optimal', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
-                          SizedBox(height: 6),
-                          Text('Home conditions are acceptable, but improvements are recommended.', style: TextStyle(fontSize: 12, color: Colors.black87)),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text('Status: Below Optimal', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                          IconButton(
+                            icon: const Icon(Icons.error_outline, color: Color(0xFFFFC107)),
+                            onPressed: () => setState(() => _showStatusPopup = true),
+                            tooltip: 'Details',
+                          ),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 6),
                   ],
                 ),
               ),
 
-              // remaining content stays inside the page padding
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
+              // inset separator between the two rounded sections
+              Container(
+                height: 8,
+                width: double.infinity,
+                margin: const EdgeInsets.symmetric(horizontal: 16.0),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF8F8F8),
+                ),
+              ),
 
+              // rooms section with rounded top corners
+              Container(
+                width: double.infinity,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(16),
+                    topRight: Radius.circular(16),
+                  ),
+                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+
+                    const Text('My Rooms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                    const SizedBox(height: 8),
                     RoomNavBar(
                       selectedIndex: _selectedRoomIndex,
                       onSelected: (i) => setState(() => _selectedRoomIndex = i),
@@ -291,10 +344,13 @@ class _DashboardPageState extends State<DashboardPage> {
                   ],
                 ),
               ),
+              ),
             ],
+              ),
           ),
         ),
-          ),
+        ],
+      ),
 
           // transient welcome banner shown at top for a few seconds
           if (_showWelcomeBanner)
@@ -325,6 +381,57 @@ class _DashboardPageState extends State<DashboardPage> {
                         ),
                       ],
                     ),
+                  ),
+                ),
+              ),
+            ),
+          // status detail popup overlay (dim background + centered white box)
+          if (_showStatusPopup)
+            Positioned.fill(
+              child: Material(
+                color: Colors.black54,
+                child: GestureDetector(
+                  onTap: () {
+                    // tapping outside closes the popup
+                    setState(() => _showStatusPopup = false);
+                  },
+                  child: Stack(
+                    children: [
+                      // center-top positioned popup container
+                      Positioned(
+                        top: MediaQuery.of(context).padding.top + 80,
+                        left: 24,
+                        right: 24,
+                        child: Material(
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.end,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.close),
+                                      onPressed: () => setState(() => _showStatusPopup = false),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 4),
+                                const Text('Home conditions are acceptable, but improvements are recommended.', style: TextStyle(fontSize: 14, color: Colors.black87)),
+                                const SizedBox(height: 8),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ),
