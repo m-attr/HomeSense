@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../helpers/nav_helper.dart';
 import 'page_login.dart';
 import 'page_welcome.dart';
 import '../../models/user.dart';
@@ -10,7 +11,8 @@ class SignupPage extends StatefulWidget {
   _SignupPageState createState() => _SignupPageState();
 }
 
-class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateMixin {
+class _SignupPageState extends State<SignupPage>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _animationController;
   late final Animation<Offset> _slideAnimation;
 
@@ -28,9 +30,13 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero).animate(
-      CurvedAnimation(parent: _animationController, curve: Curves.easeInOutCubic),
-    );
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeInOutCubic,
+          ),
+        );
     _animationController.forward();
   }
 
@@ -46,7 +52,7 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
 
   void _navigateTo(Widget page) {
     _animationController.reverse().then((_) {
-      Navigator.push(context, MaterialPageRoute(builder: (context) => page));
+      navigateWithLoading(context, destination: page);
     });
   }
 
@@ -78,9 +84,11 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
       return;
     }
 
-
     if (!_isPasswordValid(password)) {
-      setState(() => _errorMessage = 'Password must be at least 8 characters, include upper and lower case letters and a number.');
+      setState(
+        () => _errorMessage =
+            'Password must be at least 8 characters, include upper and lower case letters and a number.',
+      );
       return;
     }
 
@@ -91,7 +99,9 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
 
     final repo = UserRepository.instance;
     if (repo.findByEmail(email) != null) {
-      setState(() => _errorMessage = 'An account with that email already exists.');
+      setState(
+        () => _errorMessage = 'An account with that email already exists.',
+      );
       return;
     }
 
@@ -99,7 +109,11 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
     repo.addUser(newUser);
 
     _animationController.reverse().then((_) {
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => LoginPage(showCreated: true)));
+      navigateWithLoading(
+        context,
+        destination: LoginPage(showCreated: true),
+        replace: true,
+      );
     });
   }
 
@@ -116,11 +130,18 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
             child: TextButton.icon(
               onPressed: () {
                 _animationController.reverse().then((_) {
-                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const WelcomePage()));
+                  navigateWithLoading(
+                    context,
+                    destination: const WelcomePage(),
+                    replace: true,
+                  );
                 });
               },
               icon: const Icon(Icons.arrow_back, color: Colors.white),
-              label: const Text('Back', style: TextStyle(color: Colors.white, fontSize: 16)),
+              label: const Text(
+                'Back',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
             ),
           ),
 
@@ -135,49 +156,88 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
                 padding: const EdgeInsets.fromLTRB(25.0, 40.0, 25.0, 20.0),
                 decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.only(topLeft: Radius.circular(40.0), topRight: Radius.circular(40.0)),
+                  borderRadius: BorderRadius.only(
+                    topLeft: Radius.circular(40.0),
+                    topRight: Radius.circular(40.0),
+                  ),
                   boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Center(
-                      child: Text('Get Started', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1EAA83))),
+                      child: Text(
+                        'Get Started',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1EAA83),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 20),
 
                     TextField(
                       controller: _nameController,
-                      decoration: InputDecoration(labelText: 'Full Name', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                      decoration: InputDecoration(
+                        labelText: 'Full Name',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     TextField(
                       controller: _emailController,
                       keyboardType: TextInputType.emailAddress,
-                      decoration: InputDecoration(labelText: 'Email', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                      decoration: InputDecoration(
+                        labelText: 'Email',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     TextField(
                       controller: _passwordController,
                       obscureText: true,
-                      decoration: InputDecoration(labelText: 'Password', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                      decoration: InputDecoration(
+                        labelText: 'Password',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 10),
                     TextField(
                       controller: _confirmController,
                       obscureText: true,
-                      decoration: InputDecoration(labelText: 'Confirm Password', border: OutlineInputBorder(borderRadius: BorderRadius.circular(12))),
+                      decoration: InputDecoration(
+                        labelText: 'Confirm Password',
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 20),
                     ElevatedButton(
                       onPressed: _submit,
-                      style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF1EAA83), minimumSize: const Size(double.infinity, 50)),
-                      child: const Text('Sign Up', style: TextStyle(color: Colors.white)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1EAA83),
+                        minimumSize: const Size(double.infinity, 50),
+                      ),
+                      child: const Text(
+                        'Sign Up',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
 
                     const SizedBox(height: 12),
                     if (_errorMessage != null) ...[
-                      Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                      Text(
+                        _errorMessage!,
+                        style: const TextStyle(color: Colors.red),
+                      ),
                       const SizedBox(height: 12),
                     ],
 
@@ -185,9 +245,16 @@ class _SignupPageState extends State<SignupPage> with SingleTickerProviderStateM
                       child: GestureDetector(
                         onTap: () => _navigateTo(const LoginPage()),
                         child: RichText(
-                          text: TextSpan(text: 'Already have an account? ', style: TextStyle(color: Colors.grey.shade600), children: const [
-                            TextSpan(text: 'Log in', style: TextStyle(color: Color(0xFF1EAA83))),
-                          ]),
+                          text: TextSpan(
+                            text: 'Already have an account? ',
+                            style: TextStyle(color: Colors.grey.shade600),
+                            children: const [
+                              TextSpan(
+                                text: 'Log in',
+                                style: TextStyle(color: Color(0xFF1EAA83)),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),

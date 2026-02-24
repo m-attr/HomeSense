@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../helpers/nav_helper.dart';
 import 'page_login.dart';
 import 'page_signup.dart';
 
@@ -35,7 +36,7 @@ class WelcomePage extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => LoginPage())),
+                      onPressed: () => navigateWithLoading(context, destination: LoginPage()),
                       child: const Text('Log In', style: TextStyle(color: Color(0xFF1EAA83), fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),
@@ -47,7 +48,7 @@ class WelcomePage extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                       ),
-                      onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => SignupPage())),
+                      onPressed: () => navigateWithLoading(context, destination: SignupPage()),
                       child: const Text('Sign Up', style: TextStyle(color: Color(0xFF1EAA83), fontSize: 18, fontWeight: FontWeight.bold)),
                     ),
                   ),

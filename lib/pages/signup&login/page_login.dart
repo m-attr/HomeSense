@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../../helpers/nav_helper.dart';
 import 'page_signup.dart';
 import 'page_welcome.dart';
 import '../../models/user.dart';
@@ -32,21 +33,22 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 700),
       vsync: this,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, 1),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOutCubic,
-    ));
+    _slideAnimation = Tween<Offset>(begin: const Offset(0, 1), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _animationController,
+            curve: Curves.easeInOutCubic,
+          ),
+        );
     _animationController.forward();
     _swipeController = AnimationController(
       duration: const Duration(milliseconds: 400),
       vsync: this,
     );
-    _swipeAnimation = Tween<Offset>(begin: Offset.zero, end: const Offset(-1.0, 0.0)).animate(
-      CurvedAnimation(parent: _swipeController, curve: Curves.easeInOut),
-    );
+    _swipeAnimation =
+        Tween<Offset>(begin: Offset.zero, end: const Offset(-1.0, 0.0)).animate(
+          CurvedAnimation(parent: _swipeController, curve: Curves.easeInOut),
+        );
     debugPrint('LoginPage.initState showCreated=${widget.showCreated}');
 
     _showCreatedBanner = widget.showCreated;
@@ -75,10 +77,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
   void _navigateTo(Widget page) {
     _animationController.reverse().then((_) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (context) => page),
-      );
+      navigateWithLoading(context, destination: page);
     });
   }
 
@@ -93,9 +92,7 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
     return Scaffold(
       body: Stack(
         children: [
-          Container(
-            color: const Color(0xFF1EAA83),
-          ),
+          Container(color: const Color(0xFF1EAA83)),
 
           Positioned(
             top: 40,
@@ -103,14 +100,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             child: TextButton.icon(
               onPressed: () {
                 _animationController.reverse().then((_) {
-                  Navigator.pushReplacement(
+                  navigateWithLoading(
                     context,
-                    MaterialPageRoute(builder: (context) => const WelcomePage()),
+                    destination: const WelcomePage(),
+                    replace: true,
                   );
                 });
               },
               icon: const Icon(Icons.arrow_back, color: Colors.white),
-              label: const Text('Back', style: TextStyle(color: Colors.white, fontSize: 16)),
+              label: const Text(
+                'Back',
+                style: TextStyle(color: Colors.white, fontSize: 16),
+              ),
             ),
           ),
 
@@ -131,7 +132,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       topLeft: Radius.circular(40.0),
                       topRight: Radius.circular(40.0),
                     ),
-                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 10)],
+                    boxShadow: [
+                      BoxShadow(color: Colors.black26, blurRadius: 10),
+                    ],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -139,7 +142,11 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                       const Center(
                         child: Text(
                           'Welcome Back',
-                          style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Color(0xFF1EAA83)),
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF1EAA83),
+                          ),
                         ),
                       ),
                       const SizedBox(height: 20),
@@ -198,13 +205,19 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                           final password = _passwordController.text;
 
                           if (email.isEmpty || password.isEmpty) {
-                            setState(() => _errorMessage = 'Email and password are required.');
+                            setState(
+                              () => _errorMessage =
+                                  'Email and password are required.',
+                            );
                             return;
                           }
 
                           final repo = UserRepository.instance;
                           if (!repo.validateCredentials(email, password)) {
-                            setState(() => _errorMessage = 'Invalid email or password.');
+                            setState(
+                              () =>
+                                  _errorMessage = 'Invalid email or password.',
+                            );
                             return;
                           }
 
@@ -217,30 +230,29 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
 
                           _swipeController.forward();
 
-                          final route = PageRouteBuilder(
-                            transitionDuration: const Duration(milliseconds: 400),
-                            pageBuilder: (context, animation, secondaryAnimation) => const DashboardPage(),
-                            transitionsBuilder: (context, animation, secondaryAnimation, child) {
-                              final inAnim = Tween<Offset>(begin: const Offset(1.0, 0.0), end: Offset.zero).animate(
-                                CurvedAnimation(parent: animation, curve: Curves.easeInOut),
-                              );
-                              return SlideTransition(position: inAnim, child: child);
-                            },
+                          navigateWithLoading(
+                            context,
+                            destination: const DashboardPage(),
+                            replace: true,
                           );
-
-                          Navigator.pushReplacement(context, route);
                         },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1EAA83),
                           minimumSize: const Size(double.infinity, 50),
                         ),
-                        child: const Text('Log in', style: TextStyle(color: Colors.white),),
+                        child: const Text(
+                          'Log in',
+                          style: TextStyle(color: Colors.white),
+                        ),
                       ),
 
                       const SizedBox(height: 12),
 
                       if (_errorMessage != null) ...[
-                        Text(_errorMessage!, style: const TextStyle(color: Colors.red)),
+                        Text(
+                          _errorMessage!,
+                          style: const TextStyle(color: Colors.red),
+                        ),
                         const SizedBox(height: 8),
                       ],
 
@@ -256,7 +268,9 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                               children: [
                                 TextSpan(
                                   text: 'Sign up',
-                                  style: const TextStyle(color: Color(0xFF1EAA83)),
+                                  style: const TextStyle(
+                                    color: Color(0xFF1EAA83),
+                                  ),
                                 ),
                               ],
                             ),
@@ -283,13 +297,31 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(10),
                     // use the same green-accent used across the app for consistency
-                    border: Border(left: BorderSide(color: const Color(0xFF1EAA83), width: 6)),
-                    boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 6)],
+                    border: Border(
+                      left: BorderSide(
+                        color: const Color(0xFF1EAA83),
+                        width: 6,
+                      ),
+                    ),
+                    boxShadow: [
+                      BoxShadow(color: Colors.black26, blurRadius: 6),
+                    ],
                   ),
-                  padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 12,
+                    horizontal: 12,
+                  ),
                   child: Row(
                     children: [
-                      const Expanded(child: Text('User has been created.', style: TextStyle(color: Colors.black87, fontWeight: FontWeight.w600))),
+                      const Expanded(
+                        child: Text(
+                          'User has been created.',
+                          style: TextStyle(
+                            color: Colors.black87,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
                       IconButton(
                         icon: const Icon(Icons.close, size: 20),
                         onPressed: _dismissCreatedBanner,

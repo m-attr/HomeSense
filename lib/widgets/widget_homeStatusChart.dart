@@ -17,14 +17,20 @@ class HomeStatusChart extends StatefulWidget {
   final double height;
 
   // Reduce default height so the widget occupies only the semicircle area
-  const HomeStatusChart({super.key, required this.score, this.width = 240, this.height = 220});
-// Toggle for temporary visual debugging of chart bounds
+  const HomeStatusChart({
+    super.key,
+    required this.score,
+    this.width = 240,
+    this.height = 220,
+  });
+  // Toggle for temporary visual debugging of chart bounds
 
   @override
   State<HomeStatusChart> createState() => _HomeStatusChartState();
 }
 
-class _HomeStatusChartState extends State<HomeStatusChart> with TickerProviderStateMixin {
+class _HomeStatusChartState extends State<HomeStatusChart>
+    with TickerProviderStateMixin {
   late final AnimationController _bgController; // white semicircle forming
   Animation<double> _bgAnimation = const AlwaysStoppedAnimation(0.0);
 
@@ -34,11 +40,21 @@ class _HomeStatusChartState extends State<HomeStatusChart> with TickerProviderSt
   @override
   void initState() {
     super.initState();
-    _bgController = AnimationController(vsync: this, duration: const Duration(milliseconds: 700));
-    _bgAnimation = Tween<double>(begin: 0.0, end: _kSweepArc).animate(CurvedAnimation(parent: _bgController, curve: Curves.easeOutCubic));
+    _bgController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+    _bgAnimation = Tween<double>(begin: 0.0, end: _kSweepArc).animate(
+      CurvedAnimation(parent: _bgController, curve: Curves.easeOutCubic),
+    );
 
-    _yellowController = AnimationController(vsync: this, duration: const Duration(milliseconds: 900));
-    _yellowAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(CurvedAnimation(parent: _yellowController, curve: Curves.easeOutCubic));
+    _yellowController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _yellowAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(
+      CurvedAnimation(parent: _yellowController, curve: Curves.easeOutCubic),
+    );
 
     // Attach a single listener to each controller to trigger rebuilds.
     _bgController.addListener(() {
@@ -52,8 +68,12 @@ class _HomeStatusChartState extends State<HomeStatusChart> with TickerProviderSt
     _bgController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
         Future.delayed(const Duration(milliseconds: 500), () {
-          final double targetSweep = (widget.score.clamp(0, 100) / 100.0) * _kSweepArc;
-          _yellowAnimation = Tween<double>(begin: 0.0, end: targetSweep).animate(_yellowController);
+          final double targetSweep =
+              (widget.score.clamp(0, 100) / 100.0) * _kSweepArc;
+          _yellowAnimation = Tween<double>(
+            begin: 0.0,
+            end: targetSweep,
+          ).animate(_yellowController);
           _yellowController
             ..reset()
             ..forward();
@@ -110,61 +130,102 @@ class _HomeStatusChartState extends State<HomeStatusChart> with TickerProviderSt
     // For a 3/4 arc from -135deg..+135deg the lowest point has y = center.y + r*sin(135deg)
     // center.y is at 'radius' (we place center near top), so innerH must accommodate that
     final double halfSweep = _kSweepArc / 2.0;
-    final double innerH = (1.0 + math.sin(halfSweep)) * circleRadius + stroke / 2 + pad;
+    final double innerH =
+        (1.0 + math.sin(halfSweep)) * circleRadius + stroke / 2 + pad;
 
-    return LayoutBuilder(builder: (context, constraints) {
-      if (_kHSVisualDebug) {
-        debugPrint('HomeStatusChart.build: score=${widget.score} width=$width heightParam=${widget.height} innerH=$innerH constraints=${constraints.maxWidth}x${constraints.maxHeight}');
-      }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (_kHSVisualDebug) {
+          debugPrint(
+            'HomeStatusChart.build: score=${widget.score} width=$width heightParam=${widget.height} innerH=$innerH constraints=${constraints.maxWidth}x${constraints.maxHeight}',
+          );
+        }
 
-    final double verticalShift = 25.0;
+        final double verticalShift = 25.0;
 
-    Widget content = SizedBox(
-      width: width,
-      // Use a Stack so the score text sits centered inside the painted arc
-      child: SizedBox(
-        width: totalWidth,
-        height: innerH,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            // small vertical offset moves the painted arc and text down
-            // without changing the parent container size (debug border stays fixed)
-            Transform.translate(
-              offset: Offset(0, verticalShift),
-              child: CustomPaint(
-                size: Size(totalWidth, innerH),
-                painter: _HomeStatusPainter(bgSweep: bgSweep, yellowSweep: yellowSweep, strokeWidth: stroke, arcColor: _colorForScore(widget.score)),
-              ),
-            ),
-            // center the score text inside the arc; use FittedBox to avoid overflow
-            Transform.translate(
-              offset: Offset(0, verticalShift),
-              child: FittedBox(
-                fit: BoxFit.scaleDown,
-                child: Text(
-                  '${widget.score}',
-                  style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold, color: Colors.black),
+        Widget content = SizedBox(
+          width: width,
+          // Use a Stack so the score text sits centered inside the painted arc
+          child: SizedBox(
+            width: totalWidth,
+            height: innerH,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // small vertical offset moves the painted arc and text down
+                // without changing the parent container size (debug border stays fixed)
+                Transform.translate(
+                  offset: Offset(0, verticalShift),
+                  child: CustomPaint(
+                    size: Size(totalWidth, innerH),
+                    painter: _HomeStatusPainter(
+                      bgSweep: bgSweep,
+                      yellowSweep: yellowSweep,
+                      strokeWidth: stroke,
+                      arcColor: _colorForScore(widget.score),
+                    ),
+                  ),
                 ),
-              ),
+                // Score display: big number top-left, /100 bottom-right
+                Transform.translate(
+                  offset: Offset(0, verticalShift),
+                  child: SizedBox(
+                    width: totalWidth * 0.42,
+                    height: totalWidth * 0.38,
+                    child: Stack(
+                      children: [
+                        // Big score number — top left
+                        Positioned(
+                          top: 0,
+                          left: 0,
+                          child: Text(
+                            '${widget.score}',
+                            style: const TextStyle(
+                              fontSize: 52,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFF2D3142),
+                              height: 1.0,
+                            ),
+                          ),
+                        ),
+                        // / 100 — bottom right
+                        Positioned(
+                          bottom: 0,
+                          right: 0,
+                          child: Text(
+                            '/ 100',
+                            style: TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.grey.shade500,
+                              height: 1.0,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
-
-      if (_kHSVisualDebug) {
-        content = Container(
-          decoration: BoxDecoration(border: Border.all(color: Colors.redAccent, width: 2), borderRadius: BorderRadius.circular(4)),
-          child: content,
+          ),
         );
-      }
 
-      return content;
-    });
+        if (_kHSVisualDebug) {
+          content = Container(
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.redAccent, width: 2),
+              borderRadius: BorderRadius.circular(4),
+            ),
+            child: content,
+          );
+        }
+
+        return content;
+      },
+    );
   }
 }
-
 
 // paints the item
 class _HomeStatusPainter extends CustomPainter {
@@ -172,7 +233,12 @@ class _HomeStatusPainter extends CustomPainter {
   final double yellowSweep; // radians of yellow arc (filled)
   final double strokeWidth;
   final Color arcColor;
-  _HomeStatusPainter({required this.bgSweep, required this.yellowSweep, this.strokeWidth = 18.0, this.arcColor = const Color(0xFFFFC107)});
+  _HomeStatusPainter({
+    required this.bgSweep,
+    required this.yellowSweep,
+    this.strokeWidth = 18.0,
+    this.arcColor = const Color(0xFFFFC107),
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -213,10 +279,10 @@ class _HomeStatusPainter extends CustomPainter {
     }
   }
 
-      @override
-      bool shouldRepaint(covariant _HomeStatusPainter oldDelegate) =>
-        oldDelegate.bgSweep != bgSweep ||
-        oldDelegate.yellowSweep != yellowSweep ||
-        oldDelegate.strokeWidth != strokeWidth ||
-        oldDelegate.arcColor != arcColor;
+  @override
+  bool shouldRepaint(covariant _HomeStatusPainter oldDelegate) =>
+      oldDelegate.bgSweep != bgSweep ||
+      oldDelegate.yellowSweep != yellowSweep ||
+      oldDelegate.strokeWidth != strokeWidth ||
+      oldDelegate.arcColor != arcColor;
 }

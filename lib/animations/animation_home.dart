@@ -100,8 +100,8 @@ class _SplashAnimationState extends State<SplashAnimation>
 
                     // Fixed-size circular image that fades in (does not scale)
                     Container(
-                      width: 140,
-                      height: 140,
+                      width: 160,
+                      height: 160,
                       decoration: const BoxDecoration(
                         shape: BoxShape.circle,
                       ),
@@ -110,14 +110,16 @@ class _SplashAnimationState extends State<SplashAnimation>
                         child: Container(
                           decoration: const BoxDecoration(
                             shape: BoxShape.circle,
+                            color: Colors.white,
                             boxShadow: [BoxShadow(color: Colors.black26, blurRadius: 8)],
                           ),
+                          padding: const EdgeInsets.all(12),
                           child: ClipOval(
                             child: Image.asset(
                               'images/homesense-logo.png',
-                              fit: BoxFit.cover,
-                              width: 140,
-                              height: 140,
+                              fit: BoxFit.contain,
+                              width: 136,
+                              height: 136,
                             ),
                           ),
                         ),
