@@ -152,6 +152,7 @@ class _TemperatureSectionState extends State<TemperatureSection>
           ),
         ),
         const SizedBox(height: 20),
+
         // Comfort indicator container
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -159,10 +160,10 @@ class _TemperatureSectionState extends State<TemperatureSection>
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: _comfortColor(widget.currentTemp).withOpacity(0.08),
+              color: _comfortColor(widget.currentTemp).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: _comfortColor(widget.currentTemp).withOpacity(0.3),
+                color: _comfortColor(widget.currentTemp).withValues(alpha: 0.3),
                 width: 1.2,
               ),
             ),
@@ -172,7 +173,9 @@ class _TemperatureSectionState extends State<TemperatureSection>
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: _comfortColor(widget.currentTemp).withOpacity(0.15),
+                    color: _comfortColor(
+                      widget.currentTemp,
+                    ).withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(

@@ -144,173 +144,178 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // App bar: green with rounded bottom corners
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(18),
-                bottomRight: Radius.circular(18),
+      body: Column(
+        children: [
+          // App bar: green with rounded bottom corners
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(18),
+              bottomRight: Radius.circular(18),
+            ),
+            child: Container(
+              width: double.infinity,
+              color: green,
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top,
+                left: 4,
+                right: 8,
+                bottom: 12,
               ),
-              child: Container(
-                width: double.infinity,
-                color: green,
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top,
-                  left: 4,
-                  right: 8,
-                  bottom: 12,
-                ),
-                child: SizedBox(
-                  height: 56,
-                  child: Stack(
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.arrow_back,
-                                color: Colors.white,
-                              ),
-                              onPressed: () {
-                                if (Navigator.canPop(context)) {
-                                  popWithLoading(context);
-                                } else {
-                                  navigateNamedWithLoading(
-                                    context,
-                                    routeName: '/dashboard',
-                                    replace: true,
-                                  );
-                                }
-                              },
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.only(left: 6.0),
-                              child: const Text(
-                                'Back',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 64.0),
-                          child: Text(
-                            room,
-                            textAlign: TextAlign.center,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
+              child: SizedBox(
+                height: 56,
+                child: Stack(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back,
                               color: Colors.white,
                             ),
+                            onPressed: () {
+                              if (Navigator.canPop(context)) {
+                                popWithLoading(context);
+                              } else {
+                                navigateNamedWithLoading(
+                                  context,
+                                  routeName: '/dashboard',
+                                  replace: true,
+                                );
+                              }
+                            },
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.only(left: 6.0),
+                            child: const Text(
+                              'Back',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Center(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 64.0),
+                        child: Text(
+                          room,
+                          textAlign: TextAlign.center,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
                           ),
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            // Section 1: Chart area
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 6,
-                      offset: Offset(0, 2),
                     ),
                   ],
                 ),
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: SizedBox(
-                    height: 260,
-                    child: RealTimeChart(label: quality),
-                  ),
-                ),
               ),
             ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 16),
 
-            const SizedBox(height: 16),
-
-            // Section 2: Quality nav + indicator
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(16),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: Colors.black12,
-                      blurRadius: 6,
-                      offset: Offset(0, 2),
+                  // Section 1: Chart area
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(16),
+                        child: SizedBox(
+                          height: 260,
+                          child: RealTimeChart(label: quality),
+                        ),
+                      ),
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    children: [
-                      // Quality navigation buttons
-                      Row(children: _buildQualityNavButtons()),
-                    ],
                   ),
-                ),
+
+                  const SizedBox(height: 16),
+
+                  // Section 2: Quality nav + indicator
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Column(
+                          children: [
+                            // Quality navigation buttons
+                            Row(children: _buildQualityNavButtons()),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // --- Sliding content area ---
+                  AnimatedSwitcher(
+                    duration: const Duration(milliseconds: 350),
+                    switchInCurve: Curves.easeInOut,
+                    switchOutCurve: Curves.easeInOut,
+                    transitionBuilder: (child, animation) {
+                      final isIncoming = child.key == ValueKey(_activeQuality);
+                      final begin = isIncoming
+                          ? Offset(_slideDirection.toDouble(), 0.0)
+                          : Offset(-_slideDirection.toDouble(), 0.0);
+                      return SlideTransition(
+                        position: Tween<Offset>(
+                          begin: begin,
+                          end: Offset.zero,
+                        ).animate(animation),
+                        child: child,
+                      );
+                    },
+                    child: _buildContentForQuality(
+                      key: ValueKey(_activeQuality),
+                      quality: quality,
+                      deviceWidgets: deviceWidgets,
+                    ),
+                  ),
+
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
-
-            const SizedBox(height: 16),
-
-            // --- Sliding content area ---
-            AnimatedSwitcher(
-              duration: const Duration(milliseconds: 350),
-              switchInCurve: Curves.easeInOut,
-              switchOutCurve: Curves.easeInOut,
-              transitionBuilder: (child, animation) {
-                final isIncoming = child.key == ValueKey(_activeQuality);
-                final begin = isIncoming
-                    ? Offset(_slideDirection.toDouble(), 0.0)
-                    : Offset(-_slideDirection.toDouble(), 0.0);
-                return SlideTransition(
-                  position: Tween<Offset>(
-                    begin: begin,
-                    end: Offset.zero,
-                  ).animate(animation),
-                  child: child,
-                );
-              },
-              child: _buildContentForQuality(
-                key: ValueKey(_activeQuality),
-                quality: quality,
-                deviceWidgets: deviceWidgets,
-              ),
-            ),
-
-            const SizedBox(height: 24),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -689,6 +694,8 @@ class _TempDeviceCard extends StatefulWidget {
 
 class _TempDeviceCardState extends State<_TempDeviceCard> {
   late double _setTemp;
+  int _selectedMode = -1; // -1=none, 0=Cooling, 1=Ventilation, 2=Dry
+  bool _isPoweredOn = true;
 
   @override
   void initState() {
@@ -696,8 +703,15 @@ class _TempDeviceCardState extends State<_TempDeviceCard> {
     _setTemp = widget.currentTemp;
   }
 
+  // Mode presets: Cooling=18°, Ventilation=24°, Dehumidify=26°
+  static const List<double> _modePresets = [18.0, 24.0, 26.0];
+  static const double _defaultTemp = 22.0;
+
   void _showTempSliderPopup() {
     double tempValue = _setTemp;
+    int popupMode = _selectedMode; // -1 = none selected
+    bool popupPower = _isPoweredOn;
+
     showGeneralDialog(
       context: context,
       barrierDismissible: true,
@@ -710,9 +724,101 @@ class _TempDeviceCardState extends State<_TempDeviceCard> {
             color: Colors.transparent,
             child: StatefulBuilder(
               builder: (ctx, setPopupState) {
+                const Color green = Color(0xFF1EAA83);
+                const Color darkText = Color(0xFF2D3142);
+
+                Widget modeCard({
+                  required IconData icon,
+                  required String label,
+                  required bool isSelected,
+                  required VoidCallback onTap,
+                }) {
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: onTap,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? green.withValues(alpha: 0.1)
+                              : Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isSelected ? green : Colors.grey.shade200,
+                            width: isSelected ? 1.5 : 1.0,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              icon,
+                              size: 26,
+                              color: isSelected ? green : Colors.grey.shade500,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              label,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? green
+                                    : Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                Widget actionButton({
+                  required IconData icon,
+                  required String label,
+                  required Color color,
+                  required VoidCallback onTap,
+                }) {
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: onTap,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: color.withValues(alpha: 0.3),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(icon, color: color, size: 20),
+                            const SizedBox(width: 6),
+                            Text(
+                              label,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
                 return Container(
                   width: 320,
-                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 20),
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -726,84 +832,257 @@ class _TempDeviceCardState extends State<_TempDeviceCard> {
                   ),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        widget.deviceName,
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF2D3142),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Set Temperature',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey.shade600,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-                      TempArcSlider(
-                        initialTemp: tempValue,
-                        minTemp: 10.0,
-                        maxTemp: 35.0,
-                        onChanged: (v) {
-                          setPopupState(() => tempValue = v);
-                        },
-                      ),
-                      const SizedBox(height: 20),
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(
-                                  color: Color(0xFF1EAA83),
-                                ),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                      // Header row with title + close button
+                      SizedBox(
+                        height: 44,
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    widget.deviceName,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: darkText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Set Temperature',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              child: const Text(
-                                'Cancel',
-                                style: TextStyle(
-                                  color: Color(0xFF1EAA83),
-                                  fontWeight: FontWeight.w600,
+                            ),
+                            Positioned(
+                              right: -8,
+                              top: -4,
+                              child: GestureDetector(
+                                onTap: () => Navigator.pop(ctx),
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 18,
+                                    color: Colors.grey.shade600,
+                                  ),
                                 ),
                               ),
                             ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Arc slider with min/max labels
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          TempArcSlider(
+                            initialTemp: tempValue,
+                            minTemp: 10.0,
+                            maxTemp: 35.0,
+                            onChanged: (v) {
+                              setPopupState(() {
+                                tempValue = v;
+                              });
+                              // Auto-update parent state
+                              setState(() {
+                                _setTemp = v;
+                              });
+                            },
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () {
-                                setState(() => _setTemp = tempValue);
-                                Navigator.pop(ctx);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF1EAA83),
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 14,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
+                          // Min temp label — closer to arc endpoint
+                          Positioned(
+                            left: 6,
+                            bottom: 24,
+                            child: Text(
+                              '10°${widget.unit}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF2196F3),
                               ),
-                              child: const Text(
-                                'Set',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.w600,
-                                ),
+                            ),
+                          ),
+                          // Max temp label — closer to arc endpoint
+                          Positioned(
+                            right: 6,
+                            bottom: 24,
+                            child: Text(
+                              '35°${widget.unit}',
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFF44336),
                               ),
                             ),
                           ),
                         ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Modes section
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: const Text(
+                          'Modes',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: darkText,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          modeCard(
+                            icon: Icons.severe_cold,
+                            label: 'Cooling',
+                            isSelected: popupMode == 0,
+                            onTap: () {
+                              setPopupState(() {
+                                if (popupMode == 0) {
+                                  // Deselect → revert to default
+                                  popupMode = -1;
+                                  tempValue = _defaultTemp;
+                                } else {
+                                  popupMode = 0;
+                                  tempValue = _modePresets[0];
+                                }
+                              });
+                              setState(() {
+                                _selectedMode = popupMode;
+                                _setTemp = tempValue;
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 10),
+                          modeCard(
+                            icon: Icons.mode_fan_off_outlined,
+                            label: 'Ventilation',
+                            isSelected: popupMode == 1,
+                            onTap: () {
+                              setPopupState(() {
+                                if (popupMode == 1) {
+                                  popupMode = -1;
+                                  tempValue = _defaultTemp;
+                                } else {
+                                  popupMode = 1;
+                                  tempValue = _modePresets[1];
+                                }
+                              });
+                              setState(() {
+                                _selectedMode = popupMode;
+                                _setTemp = tempValue;
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 10),
+                          modeCard(
+                            icon: Icons.water_drop_outlined,
+                            label: 'Dry',
+                            isSelected: popupMode == 2,
+                            onTap: () {
+                              setPopupState(() {
+                                if (popupMode == 2) {
+                                  popupMode = -1;
+                                  tempValue = _defaultTemp;
+                                } else {
+                                  popupMode = 2;
+                                  tempValue = _modePresets[2];
+                                }
+                              });
+                              setState(() {
+                                _selectedMode = popupMode;
+                                _setTemp = tempValue;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Power & Restart buttons
+                      Row(
+                        children: [
+                          actionButton(
+                            icon: Icons.power_settings_new,
+                            label: 'Power',
+                            color: popupPower ? green : Colors.grey.shade400,
+                            onTap: () {
+                              setPopupState(() => popupPower = !popupPower);
+                              setState(() => _isPoweredOn = popupPower);
+                            },
+                          ),
+                          const SizedBox(width: 10),
+                          actionButton(
+                            icon: Icons.restart_alt,
+                            label: 'Restart',
+                            color: const Color(0xFFFF9800),
+                            onTap: () {
+                              // Placeholder — does nothing
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Disconnect device button
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          // TODO: handle device removal
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFFF44336,
+                            ).withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: const Color(
+                                0xFFF44336,
+                              ).withValues(alpha: 0.25),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.link_off,
+                                color: Color(0xFFF44336),
+                                size: 20,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Disconnect Device',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFF44336),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                       ),
                     ],
                   ),

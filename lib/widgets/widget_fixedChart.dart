@@ -15,7 +15,7 @@ class RealTimeChart extends StatefulWidget {
 enum ChartPeriod { week, month, year }
 
 class _RealTimeChartState extends State<RealTimeChart>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   ChartPeriod _period = ChartPeriod.week;
 
   // Animation state — initialised to safe defaults; real values set in initState
@@ -23,20 +23,53 @@ class _RealTimeChartState extends State<RealTimeChart>
   Animation<double>? _morphAnim;
   List<double> _oldData = [];
   List<double> _newData = [];
+
+  // Reveal animation — draws the curve from left to right
+  AnimationController? _revealCtrl;
+  Animation<double>? _revealAnim;
   bool _firstBuild = true;
 
   List<double> get _weekData => [30, 36, 36, 36, 36, 36, 38];
   List<double> get _monthData => [115, 124, 124, 124, 124, 126];
-  List<double> get _yearData =>
-      [300, 325, 325, 325, 325, 325, 325, 330, 332, 335, 338, 340];
+  List<double> get _yearData => [
+    300,
+    325,
+    325,
+    325,
+    325,
+    325,
+    325,
+    330,
+    332,
+    335,
+    338,
+    340,
+  ];
 
-  List<String> get _weekLabels =>
-      ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  List<String> get _weekLabels => [
+    'Mon',
+    'Tue',
+    'Wed',
+    'Thu',
+    'Fri',
+    'Sat',
+    'Sun',
+  ];
   List<String> get _monthLabels => ['Wk1', 'Wk2', 'Wk3', 'Wk4'];
   List<String> get _yearLabels => [
-        'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
-        'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
-      ];
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ];
 
   @override
   void initState() {
@@ -45,17 +78,37 @@ class _RealTimeChartState extends State<RealTimeChart>
       vsync: this,
       duration: const Duration(milliseconds: 500),
     );
-    _morphAnim = CurvedAnimation(
-      parent: _morphCtrl!,
-      curve: Curves.easeInOut,
-    );
+    _morphAnim = CurvedAnimation(parent: _morphCtrl!, curve: Curves.easeInOut);
     _oldData = _dataForPeriod(_period);
     _newData = _oldData;
+
+    _revealCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    _revealAnim = CurvedAnimation(
+      parent: _revealCtrl!,
+      curve: Curves.easeInOutCubic,
+    );
+    _revealCtrl!.forward();
+  }
+
+  @override
+  void didUpdateWidget(covariant RealTimeChart oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.label != widget.label) {
+      // Re-trigger reveal animation when quality changes
+      _period = ChartPeriod.week;
+      _oldData = _dataForPeriod(_period);
+      _newData = _oldData;
+      _revealCtrl?.forward(from: 0.0);
+    }
   }
 
   @override
   void dispose() {
     _morphCtrl?.dispose();
+    _revealCtrl?.dispose();
     super.dispose();
   }
 
@@ -77,6 +130,7 @@ class _RealTimeChartState extends State<RealTimeChart>
       _newData = _dataForPeriod(next);
       _period = next;
       _morphCtrl?.forward(from: 0.0);
+      _revealCtrl?.forward(from: 0.0);
     });
   }
 
@@ -101,104 +155,133 @@ class _RealTimeChartState extends State<RealTimeChart>
       _newData = _oldData;
     }
 
-    return LayoutBuilder(builder: (context, constraints) {
-      final double totalH =
-          (constraints.maxHeight.isFinite && constraints.maxHeight > 0)
-              ? constraints.maxHeight
-              : 420.0;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final double totalH =
+            (constraints.maxHeight.isFinite && constraints.maxHeight > 0)
+            ? constraints.maxHeight
+            : 420.0;
 
-      const double outerPadding = 12.0;
-      const double headerH = 36.0;
-      const double labelH = 24.0;
-      const double spacing = 8.0;
-      final double chartH =
-          (totalH - (outerPadding * 2) - headerH - labelH - spacing)
-              .clamp(80.0, 2000.0);
+        const double outerPadding = 12.0;
+        const double headerH = 36.0;
+        const double labelH = 24.0;
+        const double spacing = 8.0;
+        final double chartH =
+            (totalH - (outerPadding * 2) - headerH - labelH - spacing).clamp(
+              80.0,
+              2000.0,
+            );
 
-      final List<String> labels = (_period == ChartPeriod.week)
-          ? _weekLabels
-          : (_period == ChartPeriod.month ? _monthLabels : _yearLabels);
-      final unitLabel = _unitForLabel(widget.label);
+        final List<String> labels = (_period == ChartPeriod.week)
+            ? _weekLabels
+            : (_period == ChartPeriod.month ? _monthLabels : _yearLabels);
+        final unitLabel = _unitForLabel(widget.label);
 
-      debugPrint(
+        debugPrint(
           'RealTimeChart.build: label=${widget.label} period=$_period '
           'totalH=$totalH chartH=$chartH width=${constraints.maxWidth} '
-          'labels=${labels.length} unit=$unitLabel');
+          'labels=${labels.length} unit=$unitLabel',
+        );
 
-      return Padding(
-        padding: const EdgeInsets.all(outerPadding),
-        child: Container(
-          color: Colors.white,
-          child: SizedBox(
-            height: totalH - outerPadding * 2,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Container(
-                  height: headerH,
-                  color: Colors.white,
-                  child: Row(
-                    children: [
-                      const Expanded(child: SizedBox.shrink()),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 6.0, vertical: 4.0),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(8.0),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              _periodRadio(ChartPeriod.week, 'Week'),
-                              _periodRadio(ChartPeriod.month, 'Month'),
-                              _periodRadio(ChartPeriod.year, 'Year'),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: spacing),
-                SizedBox(
-                  height: chartH,
-                  child: Stack(
-                    children: [
-                      if (_kVisualDebug)
-                        Positioned.fill(
+        return Padding(
+          padding: const EdgeInsets.all(outerPadding),
+          child: Container(
+            color: Colors.white,
+            child: SizedBox(
+              height: totalH - outerPadding * 2,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Container(
+                    height: headerH,
+                    color: Colors.white,
+                    child: Row(
+                      children: [
+                        const Expanded(child: SizedBox.shrink()),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
                           child: Container(
-                            color: Colors.yellowAccent
-                                .withAlpha((0.35 * 255).round()),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6.0,
+                              vertical: 4.0,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(8.0),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                _periodRadio(ChartPeriod.week, 'Week'),
+                                _periodRadio(ChartPeriod.month, 'Month'),
+                                _periodRadio(ChartPeriod.year, 'Year'),
+                              ],
+                            ),
                           ),
                         ),
-                      Positioned.fill(
-                        child: AnimatedBuilder(
-                          animation: _morphAnim ?? const AlwaysStoppedAnimation(1.0),
-                          builder: (context, _) {
-                            return CustomPaint(
-                              painter: _CubicLineChartPainter(
-                                oldData: _oldData,
-                                newData: _newData,
-                                t: _morphAnim?.value ?? 1.0,
-                                unitLabel: unitLabel,
-                              ),
-                            );
-                          },
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: labelH),
-              ],
+                  const SizedBox(height: spacing),
+                  SizedBox(
+                    height: chartH,
+                    child: Stack(
+                      children: [
+                        if (_kVisualDebug)
+                          Positioned.fill(
+                            child: Container(
+                              color: Colors.yellowAccent.withAlpha(
+                                (0.35 * 255).round(),
+                              ),
+                            ),
+                          ),
+                        Positioned.fill(
+                          child: AnimatedBuilder(
+                            animation: Listenable.merge([
+                              _morphAnim ?? const AlwaysStoppedAnimation(1.0),
+                              _revealAnim ?? const AlwaysStoppedAnimation(1.0),
+                            ]),
+                            builder: (context, _) {
+                              // Left offset = Y-axis labels area so they stay visible
+                              final chartAreaW =
+                                  constraints.maxWidth - 24.0; // outerPadding*2
+                              const leftPad = 8.0;
+                              final pointPad = (chartAreaW * 0.06).clamp(
+                                8.0,
+                                24.0,
+                              );
+                              final leftOffset =
+                                  12.0 +
+                                  leftPad +
+                                  pointPad; // outerPadding + left + pointPad
+                              return ClipRect(
+                                clipper: _RevealClipper(
+                                  _revealAnim?.value ?? 1.0,
+                                  leftOffset: leftOffset,
+                                ),
+                                child: CustomPaint(
+                                  painter: _CubicLineChartPainter(
+                                    oldData: _oldData,
+                                    newData: _newData,
+                                    t: _morphAnim?.value ?? 1.0,
+                                    unitLabel: unitLabel,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: labelH),
+                ],
+              ),
             ),
           ),
-        ),
-      );
-    });
+        );
+      },
+    );
   }
 
   Widget _periodRadio(ChartPeriod p, String label) {
@@ -213,8 +296,10 @@ class _RealTimeChartState extends State<RealTimeChart>
             _switchPeriod(v);
           },
         ),
-        Text(label,
-            style: const TextStyle(color: Color(0xFF1EAA83), fontSize: 12)),
+        Text(
+          label,
+          style: const TextStyle(color: Color(0xFF1EAA83), fontSize: 12),
+        ),
       ],
     );
   }
@@ -257,14 +342,17 @@ class _CubicLineChartPainter extends CustomPainter {
     if (newData.isEmpty && oldData.isEmpty) return;
 
     // Use the larger count so we have enough points for a smooth morph
-    final int morphCount =
-        oldData.length > newData.length ? oldData.length : newData.length;
+    final int morphCount = oldData.length > newData.length
+        ? oldData.length
+        : newData.length;
     final sampledOld = _resample(oldData, morphCount);
     final sampledNew = _resample(newData, morphCount);
 
     // Lerp each value
-    final List<double> data = List.generate(morphCount,
-        (i) => sampledOld[i] + (sampledNew[i] - sampledOld[i]) * t);
+    final List<double> data = List.generate(
+      morphCount,
+      (i) => sampledOld[i] + (sampledNew[i] - sampledOld[i]) * t,
+    );
 
     const double left = 8.0, right = 8.0, top = 6.0, bottom = 6.0;
     final chartW = size.width - left - right;
@@ -288,9 +376,10 @@ class _CubicLineChartPainter extends CustomPainter {
         text: TextSpan(
           text: value.toStringAsFixed(0),
           style: const TextStyle(
-              fontSize: 10,
-              color: Colors.black,
-              fontWeight: FontWeight.bold),
+            fontSize: 10,
+            color: Colors.black,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         textDirection: TextDirection.ltr,
       );
@@ -313,8 +402,7 @@ class _CubicLineChartPainter extends CustomPainter {
       final double value;
       if (i == 0) {
         // Left virtual point raised 30 % of the range
-        value =
-            (data.first + (maxVal - minVal) * 0.30).clamp(minVal, maxVal);
+        value = (data.first + (maxVal - minVal) * 0.30).clamp(minVal, maxVal);
       } else if (i == data.length + 1) {
         value = data.last;
       } else {
@@ -354,14 +442,27 @@ class _CubicLineChartPainter extends CustomPainter {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.4;
     canvas.drawLine(
-        Offset(startX2, top + chartH), Offset(endX2, top + chartH), axisPaint);
+      Offset(startX2, top + chartH),
+      Offset(endX2, top + chartH),
+      axisPaint,
+    );
 
     // Optional debug markers
     if (_kVisualDebug && points.length >= 2) {
-      canvas.drawCircle(points[0], 6.0,
-          Paint()..color = Colors.red..style = PaintingStyle.fill);
-      canvas.drawCircle(points[1], 4.0,
-          Paint()..color = Colors.blue..style = PaintingStyle.fill);
+      canvas.drawCircle(
+        points[0],
+        6.0,
+        Paint()
+          ..color = Colors.red
+          ..style = PaintingStyle.fill,
+      );
+      canvas.drawCircle(
+        points[1],
+        4.0,
+        Paint()
+          ..color = Colors.blue
+          ..style = PaintingStyle.fill,
+      );
     }
   }
 
@@ -380,9 +481,13 @@ class _CubicLineChartPainter extends CustomPainter {
       final p2 = pts[i + 1];
       final p3 = i + 2 < pts.length ? pts[i + 2] : p2;
       final c1 = Offset(
-          p1.dx + (p2.dx - p0.dx) / 6.0, p1.dy + (p2.dy - p0.dy) / 6.0);
+        p1.dx + (p2.dx - p0.dx) / 6.0,
+        p1.dy + (p2.dy - p0.dy) / 6.0,
+      );
       final c2 = Offset(
-          p2.dx - (p3.dx - p1.dx) / 6.0, p2.dy - (p3.dy - p1.dy) / 6.0);
+        p2.dx - (p3.dx - p1.dx) / 6.0,
+        p2.dy - (p3.dy - p1.dy) / 6.0,
+      );
       path.cubicTo(c1.dx, c1.dy, c2.dx, c2.dy, p2.dx, p2.dy);
     }
     return path;
@@ -397,5 +502,26 @@ class _CubicLineChartPainter extends CustomPainter {
   }
 }
 
+// ---------------------------------------------------------------------------
+// Clipper — progressively reveals the chart from left to right
+// ---------------------------------------------------------------------------
+class _RevealClipper extends CustomClipper<Rect> {
+  final double revealFraction;
+  final double leftOffset;
+  _RevealClipper(this.revealFraction, {this.leftOffset = 0.0});
 
+  @override
+  Rect getClip(Size size) {
+    // Y-axis labels (0 → leftOffset) are always visible.
+    // The curve area (leftOffset → width) reveals progressively.
+    final double revealWidth =
+        leftOffset + (size.width - leftOffset) * revealFraction;
+    return Rect.fromLTWH(0, 0, revealWidth, size.height);
+  }
 
+  @override
+  bool shouldReclip(covariant _RevealClipper oldClipper) {
+    return oldClipper.revealFraction != revealFraction ||
+        oldClipper.leftOffset != leftOffset;
+  }
+}

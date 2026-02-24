@@ -10,7 +10,6 @@ class AboutPage extends StatefulWidget {
 }
 
 class _AboutPageState extends State<AboutPage> {
-
   static const String _companyPhone = '+15551234567';
   static const String _companyEmail = 'support@homesense.co';
   static const String _developerName = 'HomeSense Dev';
@@ -22,10 +21,14 @@ class _AboutPageState extends State<AboutPage> {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri);
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unable to open dialer')));
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Unable to open dialer')));
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error opening dialer')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Error opening dialer')));
     }
   }
 
@@ -47,9 +50,13 @@ class _AboutPageState extends State<AboutPage> {
         await launchUrl(mailtoUri);
         return;
       }
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Unable to open email client')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Unable to open email client')),
+      );
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Error opening email client')));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error opening email client')),
+      );
     }
   }
 
@@ -60,75 +67,77 @@ class _AboutPageState extends State<AboutPage> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F7FA),
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Green app bar with rounded bottom corners
-            ClipRRect(
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(18),
-                bottomRight: Radius.circular(18),
+      body: Column(
+        children: [
+          // Green app bar with rounded bottom corners
+          ClipRRect(
+            borderRadius: const BorderRadius.only(
+              bottomLeft: Radius.circular(18),
+              bottomRight: Radius.circular(18),
+            ),
+            child: Container(
+              width: double.infinity,
+              color: green,
+              padding: EdgeInsets.only(
+                top: MediaQuery.of(context).padding.top,
+                left: 4,
+                right: 8,
+                bottom: 12,
               ),
-              child: Container(
-                width: double.infinity,
-                color: green,
-                padding: EdgeInsets.only(
-                  top: MediaQuery.of(context).padding.top,
-                  left: 4,
-                  right: 8,
-                  bottom: 12,
-                ),
-                child: SizedBox(
-                  height: 56,
-                  child: Stack(
-                    children: [
-                      Align(
-                        alignment: Alignment.centerLeft,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            IconButton(
-                              icon: const Icon(
-                                Icons.arrow_back,
-                                color: Colors.white,
-                              ),
-                              onPressed: () => navigateNamedWithLoading(
-                                context,
-                                routeName: '/dashboard',
-                                replace: true,
-                              ),
+              child: SizedBox(
+                height: 56,
+                child: Stack(
+                  children: [
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          IconButton(
+                            icon: const Icon(
+                              Icons.arrow_back,
+                              color: Colors.white,
                             ),
-                            const Padding(
-                              padding: EdgeInsets.only(left: 6.0),
-                              child: Text(
-                                'Back',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
+                            onPressed: () => navigateNamedWithLoading(
+                              context,
+                              routeName: '/dashboard',
+                              replace: true,
                             ),
-                          ],
-                        ),
-                      ),
-                      const Center(
-                        child: Text(
-                          'About Us',
-                          style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
                           ),
+                          const Padding(
+                            padding: EdgeInsets.only(left: 6.0),
+                            child: Text(
+                              'Back',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Center(
+                      child: Text(
+                        'About Us',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
             ),
-
-            const SizedBox(height: 16),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  const SizedBox(height: 16),
 
                   // Header area
                   Padding(
@@ -432,10 +441,7 @@ class _AboutPageState extends State<AboutPage> {
                               subtitle: 'Call us for support',
                               onTap: _launchPhone,
                             ),
-                            Divider(
-                              color: Colors.grey.shade200,
-                              height: 24,
-                            ),
+                            Divider(color: Colors.grey.shade200, height: 24),
                             // Email
                             _contactTile(
                               icon: Icons.email_outlined,
@@ -443,10 +449,7 @@ class _AboutPageState extends State<AboutPage> {
                               subtitle: 'Send feedback or report an issue',
                               onTap: _launchEmail,
                             ),
-                            Divider(
-                              color: Colors.grey.shade200,
-                              height: 24,
-                            ),
+                            Divider(color: Colors.grey.shade200, height: 24),
                             // Developer
                             _contactTile(
                               icon: Icons.code,
@@ -528,6 +531,9 @@ class _AboutPageState extends State<AboutPage> {
                 ],
               ),
             ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -567,10 +573,7 @@ class _AboutPageState extends State<AboutPage> {
           height: 72,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            border: Border.all(
-              color: Colors.grey.shade300,
-              width: 1.5,
-            ),
+            border: Border.all(color: Colors.grey.shade300, width: 1.5),
           ),
           child: ClipOval(
             child: Image.asset(
@@ -625,17 +628,13 @@ class _AboutPageState extends State<AboutPage> {
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: const Color(0xFF2D3142),
-                    decoration:
-                        onTap != null ? TextDecoration.underline : null,
+                    decoration: onTap != null ? TextDecoration.underline : null,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey.shade600,
-                  ),
+                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
                 ),
               ],
             ),

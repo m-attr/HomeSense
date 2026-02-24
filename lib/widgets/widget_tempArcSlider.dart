@@ -37,6 +37,14 @@ class _TempArcSliderState extends State<TempArcSlider> {
     _currentTemp = widget.initialTemp.clamp(widget.minTemp, widget.maxTemp);
   }
 
+  @override
+  void didUpdateWidget(covariant TempArcSlider old) {
+    super.didUpdateWidget(old);
+    if (old.initialTemp != widget.initialTemp) {
+      _currentTemp = widget.initialTemp.clamp(widget.minTemp, widget.maxTemp);
+    }
+  }
+
   double get _fraction =>
       ((_currentTemp - widget.minTemp) / (widget.maxTemp - widget.minTemp))
           .clamp(0.0, 1.0);
@@ -106,9 +114,9 @@ class _TempArcSliderState extends State<TempArcSlider> {
                 strokeWidth: _strokeWidth,
                 thumbRadius: _thumbRadius,
               ),
-              child: Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 20),
+              child: Padding(
+                padding: EdgeInsets.only(bottom: h * 0.18),
+                child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -118,8 +126,10 @@ class _TempArcSliderState extends State<TempArcSlider> {
                           fontSize: 40,
                           fontWeight: FontWeight.bold,
                           color: Color(0xFF2D3142),
+                          height: 1.0,
                         ),
                       ),
+                      const SizedBox(height: 2),
                       Text(
                         '°C',
                         style: TextStyle(
