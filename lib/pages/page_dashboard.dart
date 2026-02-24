@@ -100,11 +100,11 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: [
                   Icon(Icons.wb_sunny, color: Colors.amberAccent),
                   SizedBox(width: 6),
-                  Text('28\\u00B0', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  Text('28\u00B0', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                 ],
               ),
               SizedBox(height: 2),
-              Text("Today's Weather", style: TextStyle(color: Colors.white70, fontSize: 12)),
+              Text("Today's Weather", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
             ],
           ),
         ),
