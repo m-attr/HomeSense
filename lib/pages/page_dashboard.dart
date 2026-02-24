@@ -25,25 +25,23 @@ class _DashboardPageState extends State<DashboardPage> {
   bool _showStatusPopup = false;
 
   Color? _colorForValue(double value, double threshold) {
-    if (threshold <= 0) return Color(0xFF1EAA83);
+    if (threshold <= 0) return const Color(0xFF1EAA83);
     if (value >= threshold) return Colors.red;
     if (value >= threshold * 0.8) return Colors.amber;
     return null;
   }
+
   final List<Map<String, double>> _roomSamples = [
-    // Living Room
     {
       'electricity': 8.6,
       'water': 120.0,
       'temperature': 21.0,
     },
-    // Kitchen
     {
       'electricity': 12.4,
       'water': 180.0,
       'temperature': 23.5,
     },
-    // Bedroom
     {
       'electricity': 6.2,
       'water': 95.0,
@@ -102,7 +100,7 @@ class _DashboardPageState extends State<DashboardPage> {
                 children: [
                   Icon(Icons.wb_sunny, color: Colors.amberAccent),
                   SizedBox(width: 6),
-                  Text('28\u00B0', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                  Text('28\\u00B0', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                 ],
               ),
               SizedBox(height: 2),
@@ -112,13 +110,13 @@ class _DashboardPageState extends State<DashboardPage> {
         ),
         actions: [
           Builder(builder: (context) => IconButton(
-            icon: const Icon(Icons.menu, size: 34),
-            iconSize: 32,
-            padding: const EdgeInsets.all(12),
-            onPressed: () => Scaffold.of(context).openEndDrawer(),
-            color: Colors.white,
-            tooltip: 'Menu',
-          )),
+                icon: const Icon(Icons.menu, size: 34),
+                iconSize: 32,
+                padding: const EdgeInsets.all(12),
+                onPressed: () => Scaffold.of(context).openEndDrawer(),
+                color: Colors.white,
+                tooltip: 'Menu',
+              )),
         ],
       ),
 
@@ -135,11 +133,9 @@ class _DashboardPageState extends State<DashboardPage> {
           Navigator.pop(context);
           Navigator.push(context, MaterialPageRoute(builder: (_) => const AboutPage()));
         },
-        
         onSettings: () async {
           Navigator.pop(context);
           await Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
-          // Rebuild dashboard so converted unit values are reflected immediately
           if (!mounted) return;
           setState(() {});
         },
@@ -153,7 +149,7 @@ class _DashboardPageState extends State<DashboardPage> {
         onChangeProfileImage: () => _changeProfileImage(context),
       ),
 
-      backgroundColor: Colors.white,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           SafeArea(
@@ -161,198 +157,173 @@ class _DashboardPageState extends State<DashboardPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.only(top: 12.0),
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(16),
-                    bottomRight: Radius.circular(16),
-                  ),
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 6),
-                    const Center(child: Text(
-                      'Home Health Score',
-                      style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
-                    ),),
-                    const SizedBox(height: 6),
-
-                    Center(child: HomeStatusChart(score: 75)),
-
-                 
-                    Container(
-                      margin: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 24),
-                      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(8.0),
-                        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
-                        border: Border(
-                          left: BorderSide(width: 8.0, color: const Color(0xFFFFC107)),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text('Status: Below Optimal', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
-                          IconButton(
-                            icon: const Icon(Icons.error_outline, color: Color(0xFFFFC107)),
-                            onPressed: () => setState(() => _showStatusPopup = true),
-                            tooltip: 'Details',
+                  SizedBox(height: 20,),
+                  
+                  // Health block
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.only(top: 12.0),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        const SizedBox(height: 6),
+                        const Center(
+                            child: Text(
+                          'Home Health Score',
+                          style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.black87),
+                        )),
+                        const SizedBox(height: 6),
+                        Center(child: HomeStatusChart(score: 55)),
+                        Container(
+                          margin: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 24),
+                          padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 12.0),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(8.0),
+                            boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
+                            border: Border(left: BorderSide(width: 8.0, color: const Color(0xFFFFC107))),
                           ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-
-              // inset separator between the two rounded sections
-              Container(
-                height: 8,
-                width: double.infinity,
-                margin: const EdgeInsets.symmetric(horizontal: 16.0),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFF8F8F8),
-                ),
-              ),
-
-              // rooms section with rounded top corners
-              Container(
-                width: double.infinity,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(16),
-                    topRight: Radius.circular(16),
-                  ),
-                  boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-
-                    const Text('My Rooms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
-                    const SizedBox(height: 8),
-                    RoomNavBar(
-                      selectedIndex: _selectedRoomIndex,
-                      onSelected: (i) => setState(() => _selectedRoomIndex = i),
-                    ),
-
-                    const SizedBox(height: 12),
-
-                    SizedBox(
-                      height: 220,
-                      child: ListView(
-                        scrollDirection: Axis.horizontal,
-                        children: [
-                          const SizedBox(width: 8),
-                          (() {
-                            final idx = _selectedRoomIndex.clamp(0, _roomSamples.length - 1);
-                            final current = _roomSamples[idx];
-                            final elec = current['electricity'] ?? 0.0;
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                              child: QualityCard(
-                                qualityName: 'Electricity',
-                                qualityIcon: Icons.bolt,
-                                qualityUnit: Settings.instance.energyUnit.split(' ').first,
-                                qualityValue: elec.toStringAsFixed(1),
-                                valueColor: _colorForValue(elec, Settings.instance.electricityThreshold),
-                                onViewDetails: () {
-                                  final rooms = ['Living Room', 'Kitchen', 'Bedroom'];
-                                  final room = rooms[_selectedRoomIndex.clamp(0, rooms.length - 1)];
-                                  Navigator.push(context, MaterialPageRoute(builder: (_) => QualityDetailPage(room: room, quality: 'Electricity')));
-                                },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              const Text('Status: Below Optimal', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.black)),
+                              IconButton(
+                                icon: const Icon(Icons.error_outline, color: Color(0xFFFFC107)),
+                                onPressed: () => setState(() => _showStatusPopup = true),
+                                tooltip: 'Details',
                               ),
-                            );
-                          })(),
-                      
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                            child: Builder(builder: (context) {
-                              final idx = _selectedRoomIndex.clamp(0, _roomSamples.length - 1);
-                              final current = _roomSamples[idx];
-                              final water = current['water'] ?? 0.0;
-                              return QualityCard(
-                                qualityName: 'Water',
-                                qualityIcon: Icons.water,
-                                qualityUnit: Settings.instance.waterUnit.split(' ').first,
-                                qualityValue: water.round().toString(),
-                                valueColor: _colorForValue(water, Settings.instance.waterThreshold),
-                                onViewDetails: () {
-                                  final rooms = ['Living Room', 'Kitchen', 'Bedroom'];
-                                  final room = rooms[_selectedRoomIndex.clamp(0, rooms.length - 1)];
-                                  Navigator.push(context, MaterialPageRoute(builder: (_) => QualityDetailPage(room: room, quality: 'Water')));
-                                },
-                              );
-                            }),
+                            ],
                           ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6.0),
-                            child: Builder(builder: (context) {
-                              final idx = _selectedRoomIndex.clamp(0, _roomSamples.length - 1);
-                              final current = _roomSamples[idx];
-                              final temp = current['temperature'] ?? 0.0;
-                              return QualityCard(
-                                qualityName: 'Temperature',
-                                qualityIcon: Icons.thermostat,
-                                qualityUnit: Settings.instance.temperatureUnit.split(' ').first,
-                                qualityValue: temp.toStringAsFixed(1),
-                                valueColor: _colorForValue(temp, Settings.instance.temperatureThreshold),
-                                onViewDetails: () {
-                                  final rooms = ['Living Room', 'Kitchen', 'Bedroom'];
-                                  final room = rooms[_selectedRoomIndex.clamp(0, rooms.length - 1)];
-                                  Navigator.push(context, MaterialPageRoute(builder: (_) => QualityDetailPage(room: room, quality: 'Temperature')));
-                                },
-                              );
-                            }),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // full-width light separator
+                  SizedBox(height: 20,),
+
+                  // Rooms section
+                  Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 2))],
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const Text('My Rooms', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.black87)),
+                          const SizedBox(height: 8),
+                          RoomNavBar(selectedIndex: _selectedRoomIndex, onSelected: (i) => setState(() => _selectedRoomIndex = i)),
+                          const SizedBox(height: 12),
+                          SizedBox(
+                            height: 220,
+                            child: ListView(
+                              scrollDirection: Axis.horizontal,
+                              children: [
+                                const SizedBox(width: 8),
+                                (() {
+                                  final idx = _selectedRoomIndex.clamp(0, _roomSamples.length - 1);
+                                  final current = _roomSamples[idx];
+                                  final elec = current['electricity'] ?? 0.0;
+                                  return Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                                    child: QualityCard(
+                                      qualityName: 'Electricity',
+                                      qualityIcon: Icons.bolt,
+                                      qualityUnit: Settings.instance.energyUnit.split(' ').first,
+                                      qualityValue: elec.toStringAsFixed(1),
+                                      valueColor: _colorForValue(elec, Settings.instance.electricityThreshold),
+                                      onViewDetails: () {
+                                        final rooms = ['Living Room', 'Kitchen', 'Bedroom'];
+                                        final room = rooms[_selectedRoomIndex.clamp(0, rooms.length - 1)];
+                                        Navigator.push(context, MaterialPageRoute(builder: (_) => QualityDetailPage(room: room, quality: 'Electricity')));
+                                      },
+                                    ),
+                                  );
+                                })(),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                                  child: Builder(builder: (context) {
+                                    final idx = _selectedRoomIndex.clamp(0, _roomSamples.length - 1);
+                                    final current = _roomSamples[idx];
+                                    final water = current['water'] ?? 0.0;
+                                    return QualityCard(
+                                      qualityName: 'Water',
+                                      qualityIcon: Icons.water,
+                                      qualityUnit: Settings.instance.waterUnit.split(' ').first,
+                                      qualityValue: water.round().toString(),
+                                      valueColor: _colorForValue(water, Settings.instance.waterThreshold),
+                                      onViewDetails: () {
+                                        final rooms = ['Living Room', 'Kitchen', 'Bedroom'];
+                                        final room = rooms[_selectedRoomIndex.clamp(0, rooms.length - 1)];
+                                        Navigator.push(context, MaterialPageRoute(builder: (_) => QualityDetailPage(room: room, quality: 'Water')));
+                                      },
+                                    );
+                                  }),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6.0),
+                                  child: Builder(builder: (context) {
+                                    final idx = _selectedRoomIndex.clamp(0, _roomSamples.length - 1);
+                                    final current = _roomSamples[idx];
+                                    final temp = current['temperature'] ?? 0.0;
+                                    return QualityCard(
+                                      qualityName: 'Temperature',
+                                      qualityIcon: Icons.thermostat,
+                                      qualityUnit: Settings.instance.temperatureUnit.split(' ').first,
+                                      qualityValue: temp.toStringAsFixed(1),
+                                      valueColor: _colorForValue(temp, Settings.instance.temperatureThreshold),
+                                      onViewDetails: () {
+                                        final rooms = ['Living Room', 'Kitchen', 'Bedroom'];
+                                        final room = rooms[_selectedRoomIndex.clamp(0, rooms.length - 1)];
+                                        Navigator.push(context, MaterialPageRoute(builder: (_) => QualityDetailPage(room: room, quality: 'Temperature')));
+                                      },
+                                    );
+                                  }),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                            ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(height: 24),
+                          SizedBox(
+                            width: double.infinity,
+                            child: ElevatedButton(
+                              onPressed: () {},
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF1EAA83),
+                                padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: const [
+                                  Icon(Icons.add, color: Colors.white),
+                                  SizedBox(width: 12),
+                                  Text('Add Location', style: TextStyle(color: Colors.white, fontSize: 16)),
+                                ],
+                              ),
+                            ),
+                          ),    
                         ],
                       ),
                     ),
-
-                    const SizedBox(height: 24),
-                    
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        onPressed: () {},
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF1EAA83),
-                          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: const [
-                            Icon(Icons.add, color: Colors.white),
-                            SizedBox(width: 12),
-                            Text('Add Location', style: TextStyle(color: Colors.white, fontSize: 16)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
+                  ),
+                  SizedBox(height: 20,),
+                ],
               ),
-              ),
-            ],
-              ),
+            ),
           ),
-        ),
-        ],
-      ),
 
-          // transient welcome banner shown at top for a few seconds
           if (_showWelcomeBanner)
             Positioned(
               top: MediaQuery.of(context).padding.top + 12,
@@ -385,19 +356,17 @@ class _DashboardPageState extends State<DashboardPage> {
                 ),
               ),
             ),
-          // status detail popup overlay (dim background + centered white box)
+
           if (_showStatusPopup)
             Positioned.fill(
               child: Material(
                 color: Colors.black54,
                 child: GestureDetector(
                   onTap: () {
-                    // tapping outside closes the popup
                     setState(() => _showStatusPopup = false);
                   },
                   child: Stack(
                     children: [
-                      // center-top positioned popup container
                       Positioned(
                         top: MediaQuery.of(context).padding.top + 80,
                         left: 24,
@@ -428,7 +397,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                 const SizedBox(height: 8),
                               ],
                             ),
-                          ],
+                          ),
                         ),
                       ),
                     ],
