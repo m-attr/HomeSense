@@ -57,8 +57,8 @@ class _WaterSectionState extends State<WaterSection>
 
   String _formatUsage(double litres) {
     final unit = Settings.instance.waterUnit;
-    if (unit.contains('m³')) {
-      return '${(litres / 1000).toStringAsFixed(3)} m³';
+    if (unit.contains('mL')) {
+      return '${(litres * 1000).toStringAsFixed(0)} mL';
     }
     // Always show in litres as that's the base unit when 'Litres' is selected
     if (litres < 1.0) {
@@ -69,8 +69,8 @@ class _WaterSectionState extends State<WaterSection>
 
   String _formatGoal(double litres) {
     final unit = Settings.instance.waterUnit;
-    if (unit.contains('m³')) {
-      return '${(litres / 1000).toStringAsFixed(2)} m³';
+    if (unit.contains('mL')) {
+      return '${(litres * 1000).toStringAsFixed(0)} mL';
     }
     return '${litres.toStringAsFixed(0)} L';
   }
@@ -109,46 +109,79 @@ class _WaterSectionState extends State<WaterSection>
       children: [
         const SizedBox(height: 20),
 
-        // Water droplet widget
-        SizedBox(
-          width: 180,
-          height: 220,
-          child: CustomPaint(
-            painter: _WaterDropletPainter(
-              fillFraction: animFraction.clamp(0.0, 1.0),
-              fillColor: dropletColor,
-              wavePhase: _anim.value * math.pi * 2,
-            ),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 50),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Today's consumption in mL/L
-                    Text(
-                      _formatUsage(widget.currentUsage),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // Percentage of daily goal
-                    Text(
-                      '$percentage%',
-                      style: const TextStyle(
-                        fontSize: 38,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        height: 1.1,
-                      ),
-                    ),
-                  ],
+        // Water droplet + stats side-by-side (like temperature section)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Droplet icon
+              SizedBox(
+                width: 100,
+                height: 200,
+                child: CustomPaint(
+                  painter: _WaterDropletPainter(
+                    fillFraction: animFraction.clamp(0.0, 1.0),
+                    fillColor: dropletColor,
+                    wavePhase: _anim.value * math.pi * 2,
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 24),
+              // Stats text beside the droplet
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Percentage of daily goal
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$percentage',
+                        style: TextStyle(
+                          fontSize: 52,
+                          fontWeight: FontWeight.bold,
+                          color: accentColor,
+                          height: 1.0,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          '%',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w600,
+                            color: accentColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  // Today's consumption
+                  Text(
+                    _formatUsage(widget.currentUsage),
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'consumed today',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 20),
@@ -166,7 +199,7 @@ class _WaterSectionState extends State<WaterSection>
             ),
             const SizedBox(height: 2),
             Text(
-              'Daily Goal',
+              'Daily Target',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w500,

@@ -230,7 +230,7 @@ double convertElectricity(double kWh) {
 
 double convertWater(double litres) {
   final unit = Settings.instance.waterUnit;
-  if (unit.contains('m³')) return litres / 1000;
+  if (unit.contains('mL')) return litres * 1000;
   return litres;
 }
 
@@ -256,7 +256,8 @@ String formatElectricity(double kWh) {
 String formatWater(double litres) {
   final v = convertWater(litres);
   final unit = Settings.instance.waterUnit;
-  if (unit.contains('m³')) return v.toStringAsFixed(3);
+  if (unit.contains('mL'))
+    return v >= 1000 ? v.toStringAsFixed(0) : v.toStringAsFixed(1);
   if (v >= 100) return v.toStringAsFixed(0);
   return v.toStringAsFixed(1);
 }

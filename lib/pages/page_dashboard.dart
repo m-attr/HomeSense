@@ -9,6 +9,7 @@ import 'page_qualityDetail.dart';
 import '../models/user.dart';
 import '../widgets/widget_qualityCard.dart';
 import '../models/settings.dart';
+import '../models/room_data.dart';
 import '../widgets/widget_menuDrawer.dart';
 import '../widgets/widget_homeStatusChart.dart';
 import '../helpers/quality_helpers.dart';
@@ -77,13 +78,11 @@ class _DashboardPageState extends State<DashboardPage> {
     return 'Your home environment requires immediate attention. Multiple readings are outside safe or comfortable ranges. Please review device status and environmental conditions urgently.';
   }
 
-  // Dynamic rooms list: each entry has a name and which qualities are enabled
-  final List<String> _rooms = ['Living Room', 'Kitchen', 'Bedroom'];
-  final List<Set<String>> _roomQualities = [
-    {'Electricity', 'Water', 'Temperature'},
-    {'Electricity', 'Water', 'Temperature'},
-    {'Electricity', 'Water', 'Temperature'},
-  ];
+  // Rooms list backed by preset data (can be extended dynamically)
+  final List<String> _rooms = presetRooms.map((r) => r.name).toList();
+  final List<Set<String>> _roomQualities = presetRooms
+      .map((r) => r.qualities)
+      .toList();
 
   /// Colour based on unified quality thresholds.
   /// [quality] is 'electricity', 'water', or 'temperature'.
@@ -120,11 +119,11 @@ class _DashboardPageState extends State<DashboardPage> {
     return '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]} ${now.year}';
   }
 
-  final List<Map<String, double>> _roomSamples = [
-    {'electricity': 8.6, 'water': 120.0, 'temperature': 21.0},
-    {'electricity': 12.4, 'water': 180.0, 'temperature': 23.5},
-    {'electricity': 6.2, 'water': 95.0, 'temperature': 20.0},
-  ];
+  /// Get room data for the selected index (null if custom room with no data)
+  RoomData? _roomDataAt(int idx) {
+    if (idx < presetRooms.length) return presetRooms[idx];
+    return null;
+  }
 
   // -------------------------------------------------------
   // Add Location dialog
@@ -729,8 +728,8 @@ class _DashboardPageState extends State<DashboardPage> {
                                   setState(() => _selectedRoomIndex = i),
                             ),
                             const SizedBox(height: 12),
-                            // If this room has no sample data, show cards with '-' for selected qualities
-                            if (_selectedRoomIndex >= _roomSamples.length)
+                            // If this room has no preset data, show cards with '-' for selected qualities
+                            if (_selectedRoomIndex >= presetRooms.length)
                               SizedBox(
                                 height: 220,
                                 child: ListView(
@@ -847,65 +846,59 @@ class _DashboardPageState extends State<DashboardPage> {
                             else
                               SizedBox(
                                 height: 220,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    const SizedBox(width: 8),
-                                    (() {
-                                      final idx = _selectedRoomIndex.clamp(
-                                        0,
-                                        _roomSamples.length - 1,
-                                      );
-                                      final current = _roomSamples[idx];
-                                      final elec =
-                                          current['electricity'] ?? 0.0;
-                                      return Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 6.0,
-                                        ),
-                                        child: QualityCard(
-                                          qualityName: 'Electricity',
-                                          qualityIcon: Icons.bolt,
-                                          qualityUnit: electricityUnitLabel(),
-                                          qualityValue: formatElectricity(elec),
-                                          cardColor: kElectricityColor,
-                                          valueColor: _colorForQuality(
-                                            'electricity',
-                                            elec,
+                                child: Builder(
+                                  builder: (context) {
+                                    final rd = _roomDataAt(_selectedRoomIndex);
+                                    if (rd == null) return const SizedBox();
+                                    final room = rd.name;
+                                    final quals = rd.qualities;
+                                    final List<Widget> cards = [];
+                                    if (quals.contains('Electricity')) {
+                                      final elec = rd.electricity;
+                                      cards.add(
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6.0,
                                           ),
-                                          threshold: Settings
-                                              .instance
-                                              .electricityThreshold,
-                                          onViewDetails: () {
-                                            final room =
-                                                _rooms[_selectedRoomIndex.clamp(
-                                                  0,
-                                                  _rooms.length - 1,
-                                                )];
-                                            navigateWithLoading(
-                                              context,
-                                              destination: QualityDetailPage(
-                                                room: room,
-                                                quality: 'Electricity',
-                                              ),
-                                            );
-                                          },
+                                          child: QualityCard(
+                                            qualityName: 'Electricity',
+                                            qualityIcon: Icons.bolt,
+                                            qualityUnit: electricityUnitLabel(),
+                                            qualityValue: formatElectricity(
+                                              elec,
+                                            ),
+                                            cardColor: kElectricityColor,
+                                            valueColor: _colorForQuality(
+                                              'electricity',
+                                              elec,
+                                            ),
+                                            threshold: Settings
+                                                .instance
+                                                .electricityThreshold,
+                                            onViewDetails: () {
+                                              navigateWithLoading(
+                                                context,
+                                                destination: QualityDetailPage(
+                                                  room: room,
+                                                  quality: 'Electricity',
+                                                  availableQualities: quals
+                                                      .toList(),
+                                                  roomIndex: _selectedRoomIndex,
+                                                ),
+                                              );
+                                            },
+                                          ),
                                         ),
                                       );
-                                    })(),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6.0,
-                                      ),
-                                      child: Builder(
-                                        builder: (context) {
-                                          final idx = _selectedRoomIndex.clamp(
-                                            0,
-                                            _roomSamples.length - 1,
-                                          );
-                                          final current = _roomSamples[idx];
-                                          final water = current['water'] ?? 0.0;
-                                          return QualityCard(
+                                    }
+                                    if (quals.contains('Water')) {
+                                      final water = rd.water;
+                                      cards.add(
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6.0,
+                                          ),
+                                          child: QualityCard(
                                             qualityName: 'Water',
                                             qualityIcon: Icons.water,
                                             qualityUnit: waterUnitLabel(),
@@ -919,38 +912,29 @@ class _DashboardPageState extends State<DashboardPage> {
                                                 .instance
                                                 .waterThreshold,
                                             onViewDetails: () {
-                                              final room =
-                                                  _rooms[_selectedRoomIndex
-                                                      .clamp(
-                                                        0,
-                                                        _rooms.length - 1,
-                                                      )];
                                               navigateWithLoading(
                                                 context,
                                                 destination: QualityDetailPage(
                                                   room: room,
                                                   quality: 'Water',
+                                                  availableQualities: quals
+                                                      .toList(),
+                                                  roomIndex: _selectedRoomIndex,
                                                 ),
                                               );
                                             },
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 6.0,
-                                      ),
-                                      child: Builder(
-                                        builder: (context) {
-                                          final idx = _selectedRoomIndex.clamp(
-                                            0,
-                                            _roomSamples.length - 1,
-                                          );
-                                          final current = _roomSamples[idx];
-                                          final temp =
-                                              current['temperature'] ?? 0.0;
-                                          return QualityCard(
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    if (quals.contains('Temperature')) {
+                                      final temp = rd.temperature;
+                                      cards.add(
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 6.0,
+                                          ),
+                                          child: QualityCard(
                                             qualityName: 'Temperature',
                                             qualityIcon: Icons.thermostat,
                                             qualityUnit: temperatureUnitLabel(),
@@ -966,26 +950,30 @@ class _DashboardPageState extends State<DashboardPage> {
                                                 .instance
                                                 .temperatureThreshold,
                                             onViewDetails: () {
-                                              final room =
-                                                  _rooms[_selectedRoomIndex
-                                                      .clamp(
-                                                        0,
-                                                        _rooms.length - 1,
-                                                      )];
                                               navigateWithLoading(
                                                 context,
                                                 destination: QualityDetailPage(
                                                   room: room,
                                                   quality: 'Temperature',
+                                                  availableQualities: quals
+                                                      .toList(),
+                                                  roomIndex: _selectedRoomIndex,
                                                 ),
                                               );
                                             },
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                    const SizedBox(width: 8),
-                                  ],
+                                          ),
+                                        ),
+                                      );
+                                    }
+                                    return ListView(
+                                      scrollDirection: Axis.horizontal,
+                                      children: [
+                                        const SizedBox(width: 8),
+                                        ...cards,
+                                        const SizedBox(width: 8),
+                                      ],
+                                    );
+                                  },
                                 ),
                               ),
                             const SizedBox(height: 24),

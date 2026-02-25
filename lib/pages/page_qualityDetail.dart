@@ -7,12 +7,14 @@ import '../widgets/qualities/widget_temperatureSection.dart';
 import '../widgets/qualities/widget_waterSection.dart';
 import '../widgets/qualities/widget_electricitySection.dart';
 import '../helpers/quality_helpers.dart';
+import '../models/room_data.dart';
 
 class QualityDetailPage extends StatefulWidget {
   final String room;
   final String quality;
   final bool hasDevices;
   final List<String> availableQualities;
+  final int roomIndex;
 
   const QualityDetailPage({
     super.key,
@@ -20,6 +22,7 @@ class QualityDetailPage extends StatefulWidget {
     required this.quality,
     this.hasDevices = true,
     this.availableQualities = const ['Electricity', 'Water', 'Temperature'],
+    this.roomIndex = 0,
   });
 
   @override
@@ -83,96 +86,35 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
   }
 
   // -----------------------------------------------------------------------
-  // Period chart data — consumption per day/month (Electricity & Water)
-  //                     temperature reading per day/month (Temperature)
-  // Values start near the middle of the Y range, not from zero.
+  // Room data accessor
   // -----------------------------------------------------------------------
-
-  // --- Electricity (kWh) ---
-  List<double> _elecWeekData() => [8.2, 9.5, 7.8, 10.1, 9.3, 12.4, 11.0];
-  List<double> _elecMonthData() => [38, 42, 35, 46];
-  List<double> _elecYearData() => [
-    280,
-    310,
-    295,
-    330,
-    350,
-    390,
-    420,
-    405,
-    375,
-    340,
-    310,
-    290,
-  ];
-
-  // --- Water (L) ---
-  List<double> _waterWeekData() => [95, 110, 85, 120, 105, 140, 130];
-  List<double> _waterMonthData() => [450, 520, 480, 560];
-  List<double> _waterYearData() => [
-    3200,
-    3500,
-    3100,
-    3800,
-    4200,
-    4600,
-    5000,
-    4800,
-    4300,
-    3700,
-    3400,
-    3100,
-  ];
-
-  // --- Temperature (°C) — readings, not consumption ---
-  List<double> _tempWeekData() => [23.5, 24.2, 22.8, 25.1, 24.6, 23.0, 22.5];
-  List<double> _tempMonthData() => [23.0, 24.5, 25.2, 23.8];
-  List<double> _tempYearData() => [
-    18.5,
-    19.2,
-    21.0,
-    23.5,
-    26.0,
-    28.5,
-    30.2,
-    29.8,
-    27.0,
-    24.0,
-    20.5,
-    18.0,
-  ];
+  RoomData get _rd => widget.roomIndex < presetRooms.length
+      ? presetRooms[widget.roomIndex]
+      : presetRooms[0];
 
   // -----------------------------------------------------------------------
-  // Today chart data — hourly snapshots throughout the day (no radio buttons)
+  // Period chart data — pulled from the room's preset data
   // -----------------------------------------------------------------------
 
-  // Electricity: hourly kWh consumed today (24 h simplified to key hours)
-  List<double> _elecTodayData() => [
-    0.3,
-    0.2,
-    0.2,
-    0.1,
-    0.1,
-    0.4,
-    0.9,
-    1.2,
-    1.0,
-    0.8,
-    0.7,
-    0.6,
-    0.8,
-    0.9,
-    1.1,
-    1.3,
-    1.5,
-    1.8,
-    1.4,
-    1.0,
-    0.7,
-    0.5,
-    0.4,
-    0.3,
-  ];
+  List<double> _elecWeekData() => _rd.elecWeek;
+  List<double> _elecMonthData() => _rd.elecMonth;
+  List<double> _elecYearData() => _rd.elecYear;
+
+  List<double> _waterWeekData() => _rd.waterWeek;
+  List<double> _waterMonthData() => _rd.waterMonth;
+  List<double> _waterYearData() => _rd.waterYear;
+
+  List<double> _tempWeekData() => _rd.tempWeek;
+  List<double> _tempMonthData() => _rd.tempMonth;
+  List<double> _tempYearData() => _rd.tempYear;
+
+  // -----------------------------------------------------------------------
+  // Today chart data — hourly snapshots from room data
+  // -----------------------------------------------------------------------
+  List<double> _elecTodayData() => _rd.elecHourly;
+  List<double> _waterTodayData() => _rd.waterHourly;
+  List<double> _tempTodayData() => _rd.tempHourly;
+
   List<String> _todayLabels() => [
     '12a',
     '2a',
@@ -186,62 +128,6 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
     '6p',
     '8p',
     '10p',
-  ];
-
-  // Water: hourly litres consumed today
-  List<double> _waterTodayData() => [
-    2,
-    1,
-    1,
-    1,
-    3,
-    8,
-    15,
-    12,
-    8,
-    6,
-    5,
-    4,
-    6,
-    5,
-    4,
-    7,
-    10,
-    14,
-    12,
-    8,
-    5,
-    3,
-    2,
-    2,
-  ];
-
-  // Temperature: hourly °C readings today
-  List<double> _tempTodayData() => [
-    21.0,
-    20.5,
-    20.2,
-    19.8,
-    19.5,
-    20.0,
-    21.5,
-    23.0,
-    24.5,
-    25.8,
-    26.5,
-    27.0,
-    27.5,
-    28.0,
-    27.8,
-    27.2,
-    26.0,
-    24.5,
-    23.0,
-    22.0,
-    21.5,
-    21.0,
-    20.8,
-    20.5,
   ];
 
   /// Returns period-chart data for the given quality
@@ -606,10 +492,10 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
             child: Padding(
               padding: const EdgeInsets.symmetric(vertical: 4.0),
               child: quality.toLowerCase().contains('electric')
-                  ? const ElectricitySection()
+                  ? ElectricitySection(currentUsage: _rd.electricity)
                   : quality.toLowerCase().contains('water')
-                  ? const WaterSection()
-                  : const TemperatureSection(),
+                  ? WaterSection(currentUsage: _rd.water)
+                  : TemperatureSection(currentTemp: _rd.temperature),
             ),
           ),
         ),
@@ -1093,7 +979,7 @@ class _TempDeviceCardState extends State<_TempDeviceCard> {
                     children: [
                       // Header row with title + close button
                       SizedBox(
-                        height: 44,
+                        height: 52,
                         child: Stack(
                           children: [
                             Center(

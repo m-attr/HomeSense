@@ -111,47 +111,80 @@ class _ElectricitySectionState extends State<ElectricitySection>
       children: [
         const SizedBox(height: 20),
 
-        // Lightning bolt power meter
-        SizedBox(
-          width: 180,
-          height: 220,
-          child: CustomPaint(
-            painter: _LightningBoltPainter(
-              fillFraction: animFraction.clamp(0.0, 1.0),
-              boltColor: boltColor,
-              glowOpacity: pulseGlow,
-              glowColor: glowColor,
-            ),
-            child: Center(
-              child: Padding(
-                padding: const EdgeInsets.only(top: 40),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Consumed today
-                    Text(
-                      '${formatElectricity(widget.currentUsage)} ${electricityUnitLabel()}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white.withValues(alpha: 0.92),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    // Percentage of target
-                    Text(
-                      '$percentage%',
-                      style: const TextStyle(
-                        fontSize: 38,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        height: 1.1,
-                      ),
-                    ),
-                  ],
+        // Lightning bolt + stats side-by-side (like temperature section)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 32),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Bolt icon
+              SizedBox(
+                width: 100,
+                height: 200,
+                child: CustomPaint(
+                  painter: _LightningBoltPainter(
+                    fillFraction: animFraction.clamp(0.0, 1.0),
+                    boltColor: boltColor,
+                    glowOpacity: pulseGlow,
+                    glowColor: glowColor,
+                  ),
                 ),
               ),
-            ),
+              const SizedBox(width: 24),
+              // Stats text beside the bolt
+              Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Percentage of target
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        '$percentage',
+                        style: TextStyle(
+                          fontSize: 52,
+                          fontWeight: FontWeight.bold,
+                          color: boltColor,
+                          height: 1.0,
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.only(top: 4),
+                        child: Text(
+                          '%',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.w600,
+                            color: boltColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  // Consumed today
+                  Text(
+                    '${formatElectricity(widget.currentUsage)} ${electricityUnitLabel()}',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.grey.shade700,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'consumed today',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      color: Colors.grey.shade500,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
         const SizedBox(height: 20),
@@ -322,33 +355,48 @@ class _LightningBoltPainter extends CustomPainter {
     );
   }
 
-  /// Builds a chunky lightning bolt centered in the canvas.
+  /// Builds a classic high-voltage / ⚡ lightning bolt icon.
+  ///
+  /// This is the universally recognised voltage symbol — a bold,
+  /// angular Z-shaped zigzag with a horizontal shelf in the middle.
+  /// The upper half slants down-right, the shelf cuts back left,
+  /// and the lower half slants down-right to a sharp point.
+  ///
+  ///    A ___________
+  ///    |            \ B
+  ///    |             \
+  ///    |              \
+  ///   G \       D ____/ C   ← horizontal shelf
+  ///      \     /
+  ///       \   /
+  ///        \ /
+  ///         E   ← bottom point
+  ///
   Path _buildBoltPath(double w, double h) {
-    // Bolt occupies roughly the middle 70% of width
-    final double cx = w / 2;
-    final double left = cx - w * 0.30;
-    final double right = cx + w * 0.30;
-    final double top = h * 0.03;
-    final double bot = h * 0.97;
-    final double midY = h * 0.48;
-
     final path = Path();
-    // Top peak
-    path.moveTo(cx + w * 0.02, top);
-    // Upper-right edge
-    path.lineTo(right, midY - h * 0.02);
-    // Notch right (zigzag middle)
-    path.lineTo(cx + w * 0.06, midY + h * 0.02);
-    // Lower-right → bottom point
-    path.lineTo(right - w * 0.05, midY + h * 0.04);
-    path.lineTo(cx - w * 0.02, bot);
-    // Notch left going back up
-    path.lineTo(cx - w * 0.06, midY + h * 0.08);
-    path.lineTo(left + w * 0.05, midY + h * 0.06);
-    // Upper-left back to top
-    path.lineTo(cx - w * 0.06, midY - h * 0.04);
-    path.lineTo(left, midY - h * 0.06);
-    path.close();
+
+    // A — Top-left corner
+    path.moveTo(w * 0.28, h * 0.02);
+
+    // B — Top-right corner
+    path.lineTo(w * 0.72, h * 0.02);
+
+    // C — Slant down to right side of shelf
+    path.lineTo(w * 0.58, h * 0.46);
+
+    // D — Shelf jumps right (the horizontal bar of the Z)
+    path.lineTo(w * 0.78, h * 0.46);
+
+    // E — Sharp bottom point
+    path.lineTo(w * 0.38, h * 0.98);
+
+    // F — Slant back up to left side of shelf
+    path.lineTo(w * 0.42, h * 0.54);
+
+    // G — Shelf jumps left
+    path.lineTo(w * 0.22, h * 0.54);
+
+    path.close(); // closes back to A
 
     return path;
   }
