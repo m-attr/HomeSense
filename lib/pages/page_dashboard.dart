@@ -27,8 +27,8 @@ class _DashboardPageState extends State<DashboardPage> {
   Timer? _welcomeTimer;
   bool _showStatusPopup = false;
 
-  // Home health score (0–100)
-  final int _homeScore = 30;
+  // Home health score (1–100) — dynamically computed from all room data
+  int get _homeScore => computeHomeScore();
 
   /// Status colour based on score bracket
   Color get _scoreColor {

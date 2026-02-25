@@ -32,10 +32,6 @@ class _SettingsPageState extends State<SettingsPage> {
       TextEditingController();
   final TextEditingController _waterCustomController = TextEditingController();
 
-  bool _electricityAlert = false;
-  bool _waterAlert = false;
-  bool _temperatureAlert = false;
-
   @override
   void initState() {
     super.initState();
@@ -134,10 +130,12 @@ class _SettingsPageState extends State<SettingsPage> {
                   _sectionCard(
                     context,
                     icon: Icons.display_settings,
+                    iconColor: const Color(0xFF1EAA83),
                     title: 'Display',
                     children: [
                       _unitRow(
                         Icons.bolt,
+                        const Color(0xFFF5A623),
                         'Energy Unit',
                         _energyUnit,
                         _energyOptions
@@ -151,7 +149,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         },
                       ),
                       _unitRow(
-                        Icons.water,
+                        Icons.water_drop,
+                        const Color(0xFF42A5F5),
                         'Water Unit',
                         _waterUnit,
                         _waterOptions
@@ -166,6 +165,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                       _unitRow(
                         Icons.thermostat,
+                        const Color(0xFFEF6C57),
                         'Temperature Unit',
                         _temperatureUnit,
                         _temperatureOptions
@@ -183,41 +183,11 @@ class _SettingsPageState extends State<SettingsPage> {
 
                   const SizedBox(height: 16),
 
-                  // ── Notifications section ──
-                  _sectionCard(
-                    context,
-                    icon: Icons.notifications,
-                    title: 'Notifications',
-                    children: [
-                      _alertRow(
-                        'Electricity Usage Alert',
-                        '• Notify me when electricity usage exceeds my daily limit.',
-                        _electricityAlert,
-                        (v) => setState(() => _electricityAlert = v),
-                      ),
-                      const Divider(height: 1),
-                      _alertRow(
-                        'Water Usage Alert',
-                        '• Notify me when water usage exceeds my daily goal.',
-                        _waterAlert,
-                        (v) => setState(() => _waterAlert = v),
-                      ),
-                      const Divider(height: 1),
-                      _alertRow(
-                        'Temperature Comfort Alert',
-                        '• Notify me when temperature goes outside preferred range.',
-                        _temperatureAlert,
-                        (v) => setState(() => _temperatureAlert = v),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 16),
-
                   // ── Targets section ──
                   _sectionCard(
                     context,
                     icon: Icons.track_changes,
+                    iconColor: const Color(0xFF1EAA83),
                     title: 'Monthly Targets',
                     children: [
                       // — Electricity monthly target —
@@ -226,9 +196,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         iconColor: const Color(0xFFF5A623),
                         label: 'Electricity',
                         monthlyValue:
-                            '${formatElectricity(s.electricityMonthlyTarget)} ${electricityUnitLabel()}',
+                            '${_formatRaw(convertElectricity(s.electricityMonthlyTarget))} ${electricityUnitLabel()}',
                         dailyValue:
-                            '${formatElectricity(s.electricityThreshold)} ${electricityUnitLabel()}',
+                            '${_formatRaw(convertElectricity(s.electricityThreshold))} ${electricityUnitLabel()}',
                         daysInMonth: s.daysInCurrentMonth,
                         selectedPreset: _electricityTarget,
                         presets: const [
@@ -272,9 +242,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         iconColor: const Color(0xFF42A5F5),
                         label: 'Water',
                         monthlyValue:
-                            '${formatWater(s.waterMonthlyTarget)} ${waterUnitLabel()}',
+                            '${_formatRaw(convertWater(s.waterMonthlyTarget))} ${waterUnitLabel()}',
                         dailyValue:
-                            '${formatWater(s.waterThreshold)} ${waterUnitLabel()}',
+                            '${_formatRaw(convertWater(s.waterThreshold))} ${waterUnitLabel()}',
                         daysInMonth: s.daysInCurrentMonth,
                         selectedPreset: _waterUsageTarget,
                         presets: const [
@@ -321,14 +291,21 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  // ── Section card wrapper ──
+  /// Format a raw numeric value for display (no unit conversion).
+  String _formatRaw(double v) {
+    if (v >= 10000) return v.toStringAsFixed(0);
+    if (v >= 100) return v.toStringAsFixed(0);
+    return v.toStringAsFixed(1);
+  }
+
+  // ── Section card wrapper (always open, no dropdown) ──
   Widget _sectionCard(
     BuildContext context, {
     required IconData icon,
+    required Color iconColor,
     required String title,
     required List<Widget> children,
   }) {
-    const Color green = Color(0xFF1EAA83);
     const Color dark = Color(0xFF2D3142);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -344,23 +321,38 @@ class _SettingsPageState extends State<SettingsPage> {
             ),
           ],
         ),
-        child: Theme(
-          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-          child: ExpansionTile(
-            tilePadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 4,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+              child: Row(
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: iconColor.withValues(alpha: 0.12),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(icon, color: iconColor, size: 20),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: dark,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            leading: Icon(icon, color: green),
-            title: Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.w600, color: dark),
-            ),
-            children: [
-              Divider(color: Colors.grey.shade200, height: 1),
-              ...children,
-            ],
-          ),
+            Divider(color: Colors.grey.shade200, height: 1),
+            ...children,
+            const SizedBox(height: 8),
+          ],
         ),
       ),
     );
@@ -571,25 +563,41 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _unitRow(
     IconData icon,
+    Color iconColor,
     String label,
     String value,
     List<DropdownMenuItem<String>> items,
     ValueChanged<String> onChanged,
   ) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 8.0),
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
             padding: const EdgeInsets.only(top: 6.0, right: 12.0),
-            child: Icon(icon, color: Colors.black54),
+            child: Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: iconColor.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(icon, color: iconColor, size: 18),
+            ),
           ),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(label),
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                    color: Color(0xFF2D3142),
+                  ),
+                ),
                 const SizedBox(height: 6),
                 DropdownButton<String>(
                   isExpanded: true,
@@ -602,33 +610,6 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _alertRow(
-    String title,
-    String subtitle,
-    bool value,
-    ValueChanged<bool> onChanged,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 6.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(child: Text(title)),
-              Switch(value: value, onChanged: onChanged),
-            ],
-          ),
-          const SizedBox(height: 6),
-          Text(
-            subtitle,
-            style: TextStyle(color: Colors.grey.shade600, fontSize: 12),
           ),
         ],
       ),

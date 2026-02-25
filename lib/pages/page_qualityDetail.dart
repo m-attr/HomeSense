@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import '../helpers/nav_helper.dart';
 import '../widgets/widget_fixedChart.dart';
-import '../widgets/widget_qualityDeviceCard.dart';
 import '../widgets/widget_tempArcSlider.dart';
+import '../widgets/widget_genericArcSlider.dart';
 import '../widgets/qualities/widget_temperatureSection.dart';
 import '../widgets/qualities/widget_waterSection.dart';
 import '../widgets/qualities/widget_electricitySection.dart';
@@ -187,40 +187,56 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
     final String room = widget.room;
     final String quality = _activeQuality;
 
-    // prebuild device cards list
-    final bool isTemp = quality.toLowerCase().contains('temperature');
-    final List<Widget> deviceWidgets = List<Widget>.generate(3, (i) {
-      String unit;
-      IconData leftIcon;
-      if (quality.toLowerCase().contains('electric')) {
-        unit = electricityUnitLabel();
-        leftIcon = Icons.bolt;
-      } else if (quality.toLowerCase().contains('water')) {
-        unit = waterUnitLabel();
-        leftIcon = Icons.water;
-      } else {
-        unit = temperatureUnitLabel();
-        leftIcon = Icons.thermostat;
-      }
+    // prebuild device cards list with realistic names per room
+    final String ql = quality.toLowerCase();
+    final int ri = widget.roomIndex;
 
-      if (isTemp) {
+    // Realistic device names per room per quality
+    const elecDevices = [
+      ['LED Ceiling Light', 'Smart TV', 'Floor Lamp'], // Living Room
+      ['Refrigerator', 'Microwave Oven', 'Dishwasher'], // Kitchen
+      ['Bedside Lamp', 'Phone Charger', 'Ceiling Fan'], // Bedroom
+    ];
+    const waterDevices = [
+      ['Kitchen Tap', 'Dishwasher Inlet', 'Ice Maker'], // Kitchen only
+    ];
+    const tempDevices = [
+      ['Smart AC', 'Air Purifier', 'Thermostat'], // Living Room
+      ['Range Hood', 'Kitchen Vent', 'Wall Sensor'], // Kitchen
+      ['Bedroom AC', 'Smart Fan', 'Sleep Sensor'], // Bedroom
+    ];
+
+    final List<Widget> deviceWidgets = List<Widget>.generate(3, (i) {
+      if (ql.contains('electric')) {
+        final names = ri < elecDevices.length
+            ? elecDevices[ri]
+            : elecDevices[0];
+        return _ElecDeviceCard(
+          deviceName: names[i],
+          deviceCountText: '${(i % 3) + 1} devices',
+          currentWatts: (400.0 + i * 150),
+          unit: electricityUnitLabel(),
+        );
+      } else if (ql.contains('water')) {
+        // Only Kitchen (index 1) has water; fallback to first list
+        final names = waterDevices[0];
+        return _WaterDeviceCard(
+          deviceName: names[i],
+          deviceCountText: '${(i % 3) + 1} devices',
+          currentFlow: (3.0 + i * 1.5),
+          unit: waterUnitLabel(),
+        );
+      } else {
+        final names = ri < tempDevices.length
+            ? tempDevices[ri]
+            : tempDevices[0];
         return _TempDeviceCard(
-          deviceName: '$quality device ${i + 1}',
+          deviceName: names[i],
           deviceCountText: '${(i % 3) + 1} devices',
           currentTemp: (20.0 + i),
-          unit: unit,
+          unit: temperatureUnitLabel(),
         );
       }
-
-      return QualityDeviceCard(
-        leftIcon: leftIcon,
-        rightIcon: Icons.settings,
-        deviceName: '$quality device ${i + 1}',
-        deviceCountText: '${(i % 3) + 1} devices',
-        valueText: (20 + i).toString(),
-        unitText: unit,
-        onTap: () {},
-      );
     });
 
     return Scaffold(
@@ -324,22 +340,41 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
                           ),
                         ],
                       ),
-                      child: ClipRRect(
-                        borderRadius: BorderRadius.circular(16),
-                        child: SizedBox(
-                          height: 260,
-                          child: Builder(
-                            builder: (_) {
-                              final d = _periodChartData(quality);
-                              return RealTimeChart(
-                                label: quality,
-                                weekData: d['week'] as List<double>,
-                                monthData: d['month'] as List<double>,
-                                yearData: d['year'] as List<double>,
-                              );
-                            },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.fromLTRB(16, 14, 16, 0),
+                            child: Text(
+                              'Summary',
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2D3142),
+                              ),
+                            ),
                           ),
-                        ),
+                          ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(16),
+                              bottomRight: Radius.circular(16),
+                            ),
+                            child: SizedBox(
+                              height: 260,
+                              child: Builder(
+                                builder: (_) {
+                                  final d = _periodChartData(quality);
+                                  return RealTimeChart(
+                                    label: quality,
+                                    weekData: d['week'] as List<double>,
+                                    monthData: d['month'] as List<double>,
+                                    yearData: d['year'] as List<double>,
+                                  );
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -1297,6 +1332,954 @@ class _TempDeviceCardState extends State<_TempDeviceCard> {
                 const SizedBox(width: 4),
                 Text(
                   widget.unit,
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Electricity device card — 3-dot menu opens Power Limit + Usage Modes popup
+// ---------------------------------------------------------------------------
+class _ElecDeviceCard extends StatefulWidget {
+  final String deviceName;
+  final String deviceCountText;
+  final double currentWatts;
+  final String unit;
+
+  const _ElecDeviceCard({
+    required this.deviceName,
+    required this.deviceCountText,
+    required this.currentWatts,
+    required this.unit,
+  });
+
+  @override
+  State<_ElecDeviceCard> createState() => _ElecDeviceCardState();
+}
+
+class _ElecDeviceCardState extends State<_ElecDeviceCard> {
+  late double _powerLimit;
+  int _selectedMode = 1; // 0=Eco, 1=Normal, 2=Performance
+  bool _isPoweredOn = true;
+
+  // Mode presets (watts)
+  static const List<double> _modePresets = [600.0, 1200.0, 2400.0];
+  static const double _defaultLimit = 1200.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _powerLimit = _defaultLimit;
+  }
+
+  void _showElecPopup() {
+    double limitVal = _powerLimit;
+    int popupMode = _selectedMode;
+    bool popupPower = _isPoweredOn;
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (ctx, anim1, anim2) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: StatefulBuilder(
+              builder: (ctx, setPopupState) {
+                const Color amber = Color(0xFFF5A623);
+                const Color darkText = Color(0xFF2D3142);
+
+                Widget modeCard({
+                  required IconData icon,
+                  required String label,
+                  required bool isSelected,
+                  required VoidCallback onTap,
+                }) {
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: onTap,
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 200),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        decoration: BoxDecoration(
+                          color: isSelected
+                              ? amber.withValues(alpha: 0.12)
+                              : Colors.grey.shade50,
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: isSelected ? amber : Colors.grey.shade200,
+                            width: isSelected ? 1.5 : 1.0,
+                          ),
+                        ),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              icon,
+                              size: 26,
+                              color: isSelected ? amber : Colors.grey.shade500,
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              label,
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
+                                color: isSelected
+                                    ? amber
+                                    : Colors.grey.shade600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                Widget actionButton({
+                  required IconData icon,
+                  required String label,
+                  required Color color,
+                  required VoidCallback onTap,
+                }) {
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: onTap,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: color.withValues(alpha: 0.3),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(icon, color: color, size: 20),
+                            const SizedBox(width: 6),
+                            Text(
+                              label,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return Container(
+                  width: 320,
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header
+                      SizedBox(
+                        height: 52,
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    widget.deviceName,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: darkText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Power Limit',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Positioned(
+                              right: -8,
+                              top: -4,
+                              child: GestureDetector(
+                                onTap: () => Navigator.pop(ctx),
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 18,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Arc slider — amber/orange gradient for electricity
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          GenericArcSlider(
+                            initialValue: limitVal,
+                            minValue: 100,
+                            maxValue: 3000,
+                            stepSize: 50,
+                            unitLabel: 'W',
+                            gradientColors: const [
+                              Color(0xFF66BB6A), // green (low)
+                              Color(0xFFFDD835), // yellow
+                              Color(0xFFF5A623), // amber
+                              Color(0xFFFF7043), // orange
+                              Color(0xFFF44336), // red (high)
+                            ],
+                            gradientStops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                            onChanged: (v) {
+                              setPopupState(() => limitVal = v);
+                              setState(() => _powerLimit = v);
+                            },
+                          ),
+                          Positioned(
+                            left: 6,
+                            bottom: 24,
+                            child: const Text(
+                              '100 W',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF66BB6A),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: 6,
+                            bottom: 24,
+                            child: const Text(
+                              '3000 W',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFF44336),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Modes
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Usage Mode',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: darkText,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          modeCard(
+                            icon: Icons.eco,
+                            label: 'Eco',
+                            isSelected: popupMode == 0,
+                            onTap: () {
+                              setPopupState(() {
+                                if (popupMode == 0) {
+                                  popupMode = 1;
+                                  limitVal = _defaultLimit;
+                                } else {
+                                  popupMode = 0;
+                                  limitVal = _modePresets[0];
+                                }
+                              });
+                              setState(() {
+                                _selectedMode = popupMode;
+                                _powerLimit = limitVal;
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 10),
+                          modeCard(
+                            icon: Icons.tune,
+                            label: 'Normal',
+                            isSelected: popupMode == 1,
+                            onTap: () {
+                              setPopupState(() {
+                                if (popupMode == 1) {
+                                  popupMode = 1;
+                                  limitVal = _defaultLimit;
+                                } else {
+                                  popupMode = 1;
+                                  limitVal = _modePresets[1];
+                                }
+                              });
+                              setState(() {
+                                _selectedMode = popupMode;
+                                _powerLimit = limitVal;
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 10),
+                          modeCard(
+                            icon: Icons.speed,
+                            label: 'Power',
+                            isSelected: popupMode == 2,
+                            onTap: () {
+                              setPopupState(() {
+                                if (popupMode == 2) {
+                                  popupMode = 1;
+                                  limitVal = _defaultLimit;
+                                } else {
+                                  popupMode = 2;
+                                  limitVal = _modePresets[2];
+                                }
+                              });
+                              setState(() {
+                                _selectedMode = popupMode;
+                                _powerLimit = limitVal;
+                              });
+                            },
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Power & Restart
+                      Row(
+                        children: [
+                          actionButton(
+                            icon: Icons.power_settings_new,
+                            label: 'Power',
+                            color: popupPower ? amber : Colors.grey.shade400,
+                            onTap: () {
+                              setPopupState(() => popupPower = !popupPower);
+                              setState(() => _isPoweredOn = popupPower);
+                            },
+                          ),
+                          const SizedBox(width: 10),
+                          actionButton(
+                            icon: Icons.restart_alt,
+                            label: 'Restart',
+                            color: const Color(0xFFFF9800),
+                            onTap: () {},
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Disconnect
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFFF44336,
+                            ).withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: const Color(
+                                0xFFF44336,
+                              ).withValues(alpha: 0.25),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.link_off,
+                                color: Color(0xFFF44336),
+                                size: 20,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Disconnect Device',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFF44336),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (ctx, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(
+            scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const Color accent = Color(0xFFF5A623);
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Icon(Icons.bolt, size: 26, color: accent),
+                GestureDetector(
+                  onTap: _showElecPopup,
+                  child: Icon(
+                    Icons.more_vert,
+                    size: 22,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              widget.deviceName,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.currentWatts.toStringAsFixed(0),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: accent,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'W',
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Water device card — 3-dot menu opens Flow Limit + Leak Detection popup
+// ---------------------------------------------------------------------------
+class _WaterDeviceCard extends StatefulWidget {
+  final String deviceName;
+  final String deviceCountText;
+  final double currentFlow;
+  final String unit;
+
+  const _WaterDeviceCard({
+    required this.deviceName,
+    required this.deviceCountText,
+    required this.currentFlow,
+    required this.unit,
+  });
+
+  @override
+  State<_WaterDeviceCard> createState() => _WaterDeviceCardState();
+}
+
+class _WaterDeviceCardState extends State<_WaterDeviceCard> {
+  late double _flowLimit;
+  bool _leakProtection = true;
+  bool _isPoweredOn = true;
+
+  static const double _defaultFlow = 8.0;
+
+  @override
+  void initState() {
+    super.initState();
+    _flowLimit = _defaultFlow;
+  }
+
+  void _showWaterPopup() {
+    double flowVal = _flowLimit;
+    bool popupLeak = _leakProtection;
+    bool popupPower = _isPoweredOn;
+
+    showGeneralDialog(
+      context: context,
+      barrierDismissible: true,
+      barrierLabel: 'Dismiss',
+      barrierColor: Colors.black54,
+      transitionDuration: const Duration(milliseconds: 300),
+      pageBuilder: (ctx, anim1, anim2) {
+        return Center(
+          child: Material(
+            color: Colors.transparent,
+            child: StatefulBuilder(
+              builder: (ctx, setPopupState) {
+                const Color blue = Color(0xFF42A5F5);
+                const Color darkText = Color(0xFF2D3142);
+
+                Widget actionButton({
+                  required IconData icon,
+                  required String label,
+                  required Color color,
+                  required VoidCallback onTap,
+                }) {
+                  return Expanded(
+                    child: GestureDetector(
+                      onTap: onTap,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        decoration: BoxDecoration(
+                          color: color.withValues(alpha: 0.1),
+                          borderRadius: BorderRadius.circular(14),
+                          border: Border.all(
+                            color: color.withValues(alpha: 0.3),
+                            width: 1.2,
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(icon, color: color, size: 20),
+                            const SizedBox(width: 6),
+                            Text(
+                              label,
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                color: color,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  );
+                }
+
+                return Container(
+                  width: 320,
+                  padding: const EdgeInsets.fromLTRB(24, 16, 24, 20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 20,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Header
+                      SizedBox(
+                        height: 52,
+                        child: Stack(
+                          children: [
+                            Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    widget.deviceName,
+                                    style: const TextStyle(
+                                      fontSize: 18,
+                                      fontWeight: FontWeight.bold,
+                                      color: darkText,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    'Flow Rate Limit',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: Colors.grey.shade600,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Positioned(
+                              right: -8,
+                              top: -4,
+                              child: GestureDetector(
+                                onTap: () => Navigator.pop(ctx),
+                                child: Container(
+                                  width: 32,
+                                  height: 32,
+                                  decoration: BoxDecoration(
+                                    color: Colors.grey.shade100,
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: Icon(
+                                    Icons.close,
+                                    size: 18,
+                                    color: Colors.grey.shade600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+
+                      // Arc slider — blue gradient for water
+                      Stack(
+                        clipBehavior: Clip.none,
+                        children: [
+                          GenericArcSlider(
+                            initialValue: flowVal,
+                            minValue: 1,
+                            maxValue: 20,
+                            stepSize: 0.5,
+                            unitLabel: 'L/min',
+                            gradientColors: const [
+                              Color(0xFF81D4FA), // light blue
+                              Color(0xFF42A5F5), // blue
+                              Color(0xFF1E88E5), // darker blue
+                              Color(0xFF1565C0), // deep blue
+                              Color(0xFFE53935), // red (danger)
+                            ],
+                            gradientStops: const [0.0, 0.25, 0.5, 0.75, 1.0],
+                            onChanged: (v) {
+                              setPopupState(() => flowVal = v);
+                              setState(() => _flowLimit = v);
+                            },
+                          ),
+                          Positioned(
+                            left: 6,
+                            bottom: 24,
+                            child: const Text(
+                              '1 L/min',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF81D4FA),
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            right: 6,
+                            bottom: 24,
+                            child: const Text(
+                              '20 L/min',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFFE53935),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Leak Detection toggle
+                      const Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          'Leak Protection',
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.bold,
+                            color: darkText,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      GestureDetector(
+                        onTap: () {
+                          setPopupState(() => popupLeak = !popupLeak);
+                          setState(() => _leakProtection = popupLeak);
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 200),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            color: popupLeak
+                                ? blue.withValues(alpha: 0.08)
+                                : Colors.grey.shade50,
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: popupLeak ? blue : Colors.grey.shade200,
+                              width: popupLeak ? 1.5 : 1.0,
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Icon(
+                                Icons.shield_outlined,
+                                size: 24,
+                                color: popupLeak ? blue : Colors.grey.shade500,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Auto shut-off on leak',
+                                      style: TextStyle(
+                                        fontSize: 13,
+                                        fontWeight: FontWeight.w600,
+                                        color: popupLeak
+                                            ? darkText
+                                            : Colors.grey.shade600,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      popupLeak
+                                          ? 'Protection active'
+                                          : 'Protection disabled',
+                                      style: TextStyle(
+                                        fontSize: 11,
+                                        color: popupLeak
+                                            ? blue
+                                            : Colors.grey.shade400,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                width: 48,
+                                height: 28,
+                                padding: const EdgeInsets.all(3),
+                                decoration: BoxDecoration(
+                                  color: popupLeak
+                                      ? blue
+                                      : Colors.grey.shade300,
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                child: AnimatedAlign(
+                                  duration: const Duration(milliseconds: 200),
+                                  alignment: popupLeak
+                                      ? Alignment.centerRight
+                                      : Alignment.centerLeft,
+                                  child: Container(
+                                    width: 22,
+                                    height: 22,
+                                    decoration: const BoxDecoration(
+                                      color: Colors.white,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+
+                      // Power & Restart
+                      Row(
+                        children: [
+                          actionButton(
+                            icon: Icons.power_settings_new,
+                            label: 'Power',
+                            color: popupPower ? blue : Colors.grey.shade400,
+                            onTap: () {
+                              setPopupState(() => popupPower = !popupPower);
+                              setState(() => _isPoweredOn = popupPower);
+                            },
+                          ),
+                          const SizedBox(width: 10),
+                          actionButton(
+                            icon: Icons.restart_alt,
+                            label: 'Restart',
+                            color: const Color(0xFFFF9800),
+                            onTap: () {},
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Disconnect
+                      GestureDetector(
+                        onTap: () => Navigator.pop(ctx),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(
+                              0xFFF44336,
+                            ).withValues(alpha: 0.08),
+                            borderRadius: BorderRadius.circular(14),
+                            border: Border.all(
+                              color: const Color(
+                                0xFFF44336,
+                              ).withValues(alpha: 0.25),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: const Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.link_off,
+                                color: Color(0xFFF44336),
+                                size: 20,
+                              ),
+                              SizedBox(width: 6),
+                              Text(
+                                'Disconnect Device',
+                                style: TextStyle(
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFF44336),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (ctx, anim1, anim2, child) {
+        return FadeTransition(
+          opacity: anim1,
+          child: ScaleTransition(
+            scale: CurvedAnimation(parent: anim1, curve: Curves.easeOutBack),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    const Color accent = Color(0xFF42A5F5);
+    return Card(
+      elevation: 4,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Icon(Icons.water_drop, size: 26, color: accent),
+                GestureDetector(
+                  onTap: _showWaterPopup,
+                  child: Icon(
+                    Icons.more_vert,
+                    size: 22,
+                    color: Colors.grey.shade600,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              widget.deviceName,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const Spacer(),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.currentFlow.toStringAsFixed(1),
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: accent,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  'L/min',
                   style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                 ),
               ],

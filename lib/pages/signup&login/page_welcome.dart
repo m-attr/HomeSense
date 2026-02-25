@@ -19,7 +19,7 @@ class WelcomePage extends StatelessWidget {
               width: MediaQuery.of(context).size.width * 0.9,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.asset('images/welcome-banner.jpeg', fit: BoxFit.cover),
+                child: Image.asset('images/welcome-banner.png', fit: BoxFit.cover),
               ),
             ),
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/settings.dart';
+import '../models/room_data.dart';
 
 // ═══════════════════════════════════════════════════════════════════════════
 //  UNIFIED QUALITY THRESHOLD HELPERS
@@ -266,4 +267,80 @@ String formatWater(double litres) {
 String formatTemperature(double celsius) {
   final v = convertTemperature(celsius);
   return v.toStringAsFixed(1);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+//  HOME SCORE — dynamic 1–100 score based on ALL room quality readings
+//
+//  Formula:
+//    For each quality reading across all rooms we compute an individual
+//    score (0–100) that reflects how close the value is to its daily target.
+//
+//    Electricity & Water (consumption — lower is better):
+//      fraction = value / dailyTarget
+//      score = 100  when fraction <= 0.5   (well under target)
+//      score = 100 – ((fraction – 0.5) / 0.5) * 50  when 0.5 < fraction <= 1.0
+//      score = max(0, 50 – (fraction – 1.0) * 100)  when fraction > 1.0
+//
+//    Temperature (comfort — closer to ideal is better):
+//      deviation = |value – ideal|
+//      score = 100  when deviation <= 1
+//      score = 100 – ((deviation – 1) / 9) * 100  when 1 < deviation <= 10
+//      score = 0    when deviation > 10
+//
+//    The final home score is the weighted average of all individual scores,
+//    clamped to 1–100 and rounded to a whole number.
+// ─────────────────────────────────────────────────────────────────────────
+
+/// Compute the overall home health score (1–100) from all preset rooms.
+int computeHomeScore() {
+  final s = Settings.instance;
+  final elecDaily = s.electricityThreshold; // kWh
+  final waterDaily = s.waterThreshold; // L
+  final tempIdeal = s.temperatureThreshold; // °C (base unit)
+
+  double totalScore = 0;
+  int count = 0;
+
+  for (final room in presetRooms) {
+    // Electricity
+    if (room.qualities.contains('Electricity')) {
+      totalScore += _consumptionScore(room.electricity, elecDaily);
+      count++;
+    }
+    // Water
+    if (room.qualities.contains('Water')) {
+      totalScore += _consumptionScore(room.water, waterDaily);
+      count++;
+    }
+    // Temperature
+    if (room.qualities.contains('Temperature')) {
+      totalScore += _temperatureScore(room.temperature, tempIdeal);
+      count++;
+    }
+  }
+
+  if (count == 0) return 50; // fallback
+  final avg = totalScore / count;
+  return avg.round().clamp(1, 100);
+}
+
+/// Score for consumption-type quality (electricity / water).
+/// Lower fraction = better score.
+double _consumptionScore(double value, double target) {
+  if (target <= 0) return 50;
+  final f = value / target;
+  if (f <= 0.5) return 100;
+  if (f <= 1.0) return 100 - ((f - 0.5) / 0.5) * 50;
+  // Over target — score drops fast
+  return (50 - (f - 1.0) * 100).clamp(0, 50);
+}
+
+/// Score for temperature quality.
+/// Closer to ideal = better score.
+double _temperatureScore(double value, double ideal) {
+  final d = (value - ideal).abs();
+  if (d <= 1) return 100;
+  if (d <= 10) return 100 - ((d - 1) / 9) * 100;
+  return 0;
 }

@@ -56,23 +56,15 @@ class _WaterSectionState extends State<WaterSection>
   }
 
   String _formatUsage(double litres) {
-    final unit = Settings.instance.waterUnit;
-    if (unit.contains('mL')) {
-      return '${(litres * 1000).toStringAsFixed(0)} mL';
-    }
-    // Always show in litres as that's the base unit when 'Litres' is selected
-    if (litres < 1.0) {
-      return '${(litres * 1000).toStringAsFixed(0)} mL';
-    }
-    return '${litres.toStringAsFixed(1)} L';
+    final v = convertWater(litres);
+    final label = waterUnitLabel();
+    return '${v >= 100 ? v.toStringAsFixed(0) : v.toStringAsFixed(1)} $label';
   }
 
   String _formatGoal(double litres) {
-    final unit = Settings.instance.waterUnit;
-    if (unit.contains('mL')) {
-      return '${(litres * 1000).toStringAsFixed(0)} mL';
-    }
-    return '${litres.toStringAsFixed(0)} L';
+    final v = convertWater(litres);
+    final label = waterUnitLabel();
+    return '${v >= 100 ? v.toStringAsFixed(0) : v.toStringAsFixed(1)} $label';
   }
 
   @override
