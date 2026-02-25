@@ -6,7 +6,25 @@ const bool _kVisualDebug = false;
 
 class RealTimeChart extends StatefulWidget {
   final String label;
-  const RealTimeChart({super.key, required this.label});
+  final List<double>? weekData;
+  final List<double>? monthData;
+  final List<double>? yearData;
+  final List<String>? weekLabels;
+  final List<String>? monthLabels;
+  final List<String>? yearLabels;
+  final bool showPeriodSelector;
+
+  const RealTimeChart({
+    super.key,
+    required this.label,
+    this.weekData,
+    this.monthData,
+    this.yearData,
+    this.weekLabels,
+    this.monthLabels,
+    this.yearLabels,
+    this.showPeriodSelector = true,
+  });
 
   @override
   State<RealTimeChart> createState() => _RealTimeChartState();
@@ -29,47 +47,33 @@ class _RealTimeChartState extends State<RealTimeChart>
   Animation<double>? _revealAnim;
   bool _firstBuild = true;
 
-  List<double> get _weekData => [30, 36, 36, 36, 36, 36, 38];
-  List<double> get _monthData => [115, 124, 124, 124, 124, 126];
-  List<double> get _yearData => [
-    300,
-    325,
-    325,
-    325,
-    325,
-    325,
-    325,
-    330,
-    332,
-    335,
-    338,
-    340,
-  ];
+  List<double> get _weekData => widget.weekData ?? [30, 36, 36, 36, 36, 36, 38];
+  List<double> get _monthData =>
+      widget.monthData ?? [115, 124, 124, 124, 124, 126];
+  List<double> get _yearData =>
+      widget.yearData ??
+      [300, 325, 325, 325, 325, 325, 325, 330, 332, 335, 338, 340];
 
-  List<String> get _weekLabels => [
-    'Mon',
-    'Tue',
-    'Wed',
-    'Thu',
-    'Fri',
-    'Sat',
-    'Sun',
-  ];
-  List<String> get _monthLabels => ['Wk1', 'Wk2', 'Wk3', 'Wk4'];
-  List<String> get _yearLabels => [
-    'Jan',
-    'Feb',
-    'Mar',
-    'Apr',
-    'May',
-    'Jun',
-    'Jul',
-    'Aug',
-    'Sep',
-    'Oct',
-    'Nov',
-    'Dec',
-  ];
+  List<String> get _weekLabels =>
+      widget.weekLabels ?? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+  List<String> get _monthLabels =>
+      widget.monthLabels ?? ['Wk1', 'Wk2', 'Wk3', 'Wk4'];
+  List<String> get _yearLabels =>
+      widget.yearLabels ??
+      [
+        'Jan',
+        'Feb',
+        'Mar',
+        'Apr',
+        'May',
+        'Jun',
+        'Jul',
+        'Aug',
+        'Sep',
+        'Oct',
+        'Nov',
+        'Dec',
+      ];
 
   @override
   void initState() {
@@ -192,36 +196,41 @@ class _RealTimeChartState extends State<RealTimeChart>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Container(
-                    height: headerH,
-                    color: Colors.white,
-                    child: Row(
-                      children: [
-                        const Expanded(child: SizedBox.shrink()),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                          child: Container(
+                  if (widget.showPeriodSelector)
+                    Container(
+                      height: headerH,
+                      color: Colors.white,
+                      child: Row(
+                        children: [
+                          const Expanded(child: SizedBox.shrink()),
+                          Padding(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 6.0,
-                              vertical: 4.0,
+                              horizontal: 8.0,
                             ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(8.0),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                _periodRadio(ChartPeriod.week, 'Week'),
-                                _periodRadio(ChartPeriod.month, 'Month'),
-                                _periodRadio(ChartPeriod.year, 'Year'),
-                              ],
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 6.0,
+                                vertical: 4.0,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8.0),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  _periodRadio(ChartPeriod.week, 'Week'),
+                                  _periodRadio(ChartPeriod.month, 'Month'),
+                                  _periodRadio(ChartPeriod.year, 'Year'),
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
+                        ],
+                      ),
+                    )
+                  else
+                    SizedBox(height: headerH),
                   const SizedBox(height: spacing),
                   SizedBox(
                     height: chartH,

@@ -25,6 +25,57 @@ class _DashboardPageState extends State<DashboardPage> {
   Timer? _welcomeTimer;
   bool _showStatusPopup = false;
 
+  // Home health score (0–100)
+  final int _homeScore = 30;
+
+  /// Status colour based on score bracket
+  Color get _scoreColor {
+    if (_homeScore >= 80) return const Color(0xFF1EAA83); // green — Excellent
+    if (_homeScore >= 60)
+      return const Color(0xFFFFC107); // amber — Below Optimal
+    if (_homeScore >= 40)
+      return const Color(0xFFFF9800); // orange — Needs Attention
+    return const Color(0xFFF44336); // red — Critical
+  }
+
+  /// Short label for the current score bracket
+  String get _scoreLabel {
+    if (_homeScore >= 80) return 'Excellent';
+    if (_homeScore >= 60) return 'Below Optimal';
+    if (_homeScore >= 40) return 'Needs Attention';
+    return 'Critical';
+  }
+
+  /// Subtitle shown under the status indicator
+  String get _scoreSubtitle {
+    if (_homeScore >= 80) return 'All systems running smoothly';
+    if (_homeScore >= 60) return 'Improvements recommended';
+    if (_homeScore >= 40) return 'Several areas need attention';
+    return 'Immediate action required';
+  }
+
+  /// Icon for the status bracket
+  IconData get _scoreIcon {
+    if (_homeScore >= 80) return Icons.check_circle_outline;
+    if (_homeScore >= 60) return Icons.warning_amber_rounded;
+    if (_homeScore >= 40) return Icons.error_outline;
+    return Icons.dangerous_outlined;
+  }
+
+  /// Long description for the status popup
+  String get _scoreDescription {
+    if (_homeScore >= 80) {
+      return 'Your home environment is in great shape! Temperature, energy, and water usage are all within optimal ranges, ensuring maximum comfort and efficiency.';
+    }
+    if (_homeScore >= 60) {
+      return 'Your home environment is functional but has room for improvement. Some conditions — such as temperature, humidity, or energy usage — may not be at their ideal levels, affecting comfort and efficiency.';
+    }
+    if (_homeScore >= 40) {
+      return 'Several aspects of your home environment need attention. Energy consumption or water usage may be higher than recommended, and temperature readings could be outside comfortable ranges.';
+    }
+    return 'Your home environment requires immediate attention. Multiple readings are outside safe or comfortable ranges. Please review device status and environmental conditions urgently.';
+  }
+
   // Dynamic rooms list: each entry has a name and which qualities are enabled
   final List<String> _rooms = ['Living Room', 'Kitchen', 'Bedroom'];
   final List<Set<String>> _roomQualities = [
@@ -546,7 +597,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             ),
                           ),
                           const SizedBox(height: 6),
-                          Center(child: HomeStatusChart(score: 55)),
+                          Center(child: HomeStatusChart(score: _homeScore)),
                           Container(
                             margin: const EdgeInsets.fromLTRB(16, 0, 16, 20),
                             padding: const EdgeInsets.symmetric(
@@ -554,10 +605,10 @@ class _DashboardPageState extends State<DashboardPage> {
                               vertical: 12,
                             ),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFC107).withOpacity(0.08),
+                              color: _scoreColor.withOpacity(0.08),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: const Color(0xFFFFC107).withOpacity(0.3),
+                                color: _scoreColor.withOpacity(0.3),
                                 width: 1.2,
                               ),
                             ),
@@ -567,14 +618,12 @@ class _DashboardPageState extends State<DashboardPage> {
                                   width: 38,
                                   height: 38,
                                   decoration: BoxDecoration(
-                                    color: const Color(
-                                      0xFFFFC107,
-                                    ).withOpacity(0.15),
+                                    color: _scoreColor.withOpacity(0.15),
                                     shape: BoxShape.circle,
                                   ),
-                                  child: const Icon(
-                                    Icons.warning_amber_rounded,
-                                    color: Color(0xFFFFC107),
+                                  child: Icon(
+                                    _scoreIcon,
+                                    color: _scoreColor,
                                     size: 20,
                                   ),
                                 ),
@@ -584,17 +633,17 @@ class _DashboardPageState extends State<DashboardPage> {
                                     crossAxisAlignment:
                                         CrossAxisAlignment.start,
                                     children: [
-                                      const Text(
-                                        'Below Optimal',
+                                      Text(
+                                        _scoreLabel,
                                         style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
-                                          color: Color(0xFFFFC107),
+                                          color: _scoreColor,
                                         ),
                                       ),
                                       const SizedBox(height: 2),
                                       Text(
-                                        'Improvements recommended',
+                                        _scoreSubtitle,
                                         style: TextStyle(
                                           fontSize: 12,
                                           color: Colors.grey.shade600,
@@ -604,9 +653,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                   ),
                                 ),
                                 IconButton(
-                                  icon: const Icon(
+                                  icon: Icon(
                                     Icons.info_outline,
-                                    color: Color(0xFFFFC107),
+                                    color: _scoreColor,
                                     size: 22,
                                   ),
                                   onPressed: () =>
@@ -714,7 +763,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                                   .split(' ')
                                                   .first,
                                               qualityValue: '-',
-                                              cardColor: const Color(0xFFF5A623),
+                                              cardColor: const Color(
+                                                0xFFF5A623,
+                                              ),
                                               onViewDetails: () {
                                                 navigateWithLoading(
                                                   context,
@@ -747,7 +798,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                                   .split(' ')
                                                   .first,
                                               qualityValue: '-',
-                                              cardColor: const Color(0xFF42A5F5),
+                                              cardColor: const Color(
+                                                0xFF42A5F5,
+                                              ),
                                               onViewDetails: () {
                                                 navigateWithLoading(
                                                   context,
@@ -780,7 +833,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                                   .split(' ')
                                                   .first,
                                               qualityValue: '-',
-                                              cardColor: const Color(0xFFEF6C57),
+                                              cardColor: const Color(
+                                                0xFFEF6C57,
+                                              ),
                                               onViewDetails: () {
                                                 navigateWithLoading(
                                                   context,
@@ -839,7 +894,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                                 .instance
                                                 .electricityThreshold,
                                           ),
-                                          threshold: Settings.instance.electricityThreshold,
+                                          threshold: Settings
+                                              .instance
+                                              .electricityThreshold,
                                           onViewDetails: () {
                                             final room =
                                                 _rooms[_selectedRoomIndex.clamp(
@@ -885,7 +942,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                               water,
                                               Settings.instance.waterThreshold,
                                             ),
-                                            threshold: Settings.instance.waterThreshold,
+                                            threshold: Settings
+                                                .instance
+                                                .waterThreshold,
                                             onViewDetails: () {
                                               final room =
                                                   _rooms[_selectedRoomIndex
@@ -936,7 +995,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                                   .instance
                                                   .temperatureThreshold,
                                             ),
-                                            threshold: Settings.instance.temperatureThreshold,
+                                            threshold: Settings
+                                                .instance
+                                                .temperatureThreshold,
                                             onViewDetails: () {
                                               final room =
                                                   _rooms[_selectedRoomIndex
@@ -1179,29 +1240,27 @@ class _DashboardPageState extends State<DashboardPage> {
                               width: 64,
                               height: 64,
                               decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFFFFC107,
-                                ).withOpacity(0.12),
+                                color: _scoreColor.withOpacity(0.12),
                                 shape: BoxShape.circle,
                               ),
-                              child: const Icon(
-                                Icons.warning_amber_rounded,
+                              child: Icon(
+                                _scoreIcon,
                                 size: 32,
-                                color: Color(0xFFFFC107),
+                                color: _scoreColor,
                               ),
                             ),
                             const SizedBox(height: 14),
-                            const Text(
-                              'Below Optimal',
+                            Text(
+                              _scoreLabel,
                               style: TextStyle(
                                 fontSize: 20,
                                 fontWeight: FontWeight.bold,
-                                color: Color(0xFFFFC107),
+                                color: _scoreColor,
                               ),
                             ),
                             const SizedBox(height: 4),
                             Text(
-                              'Home Health Score: 55/100',
+                              'Home Health Score: $_homeScore/100',
                               style: TextStyle(
                                 fontSize: 15,
                                 color: Colors.grey.shade600,
@@ -1226,7 +1285,7 @@ class _DashboardPageState extends State<DashboardPage> {
                             Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                'Your home environment is functional but has room for improvement. Some conditions — such as temperature, humidity, or energy usage — may not be at their ideal levels, affecting comfort and efficiency.',
+                                _scoreDescription,
                                 style: TextStyle(
                                   fontSize: 13,
                                   color: Colors.grey.shade600,
@@ -1249,19 +1308,19 @@ class _DashboardPageState extends State<DashboardPage> {
                             const SizedBox(height: 8),
                             _statusTipRow(
                               "Review each room's quality readings for any outliers.",
-                              const Color(0xFFFFC107),
+                              _scoreColor,
                             ),
                             _statusTipRow(
                               'Adjust thermostat settings to maintain 20–26°C.',
-                              const Color(0xFFFFC107),
+                              _scoreColor,
                             ),
                             _statusTipRow(
                               'Check for water leaks or unusual consumption patterns.',
-                              const Color(0xFFFFC107),
+                              _scoreColor,
                             ),
                             _statusTipRow(
                               'Ensure devices are online and reporting correctly.',
-                              const Color(0xFFFFC107),
+                              _scoreColor,
                             ),
                             const SizedBox(height: 8),
                           ],
@@ -1405,10 +1464,7 @@ class _RoomNavBarState extends State<RoomNavBar> {
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            widget.rooms.length,
-            (i) => _chip(i),
-          ),
+          children: List.generate(widget.rooms.length, (i) => _chip(i)),
         ),
       );
     }
@@ -1423,7 +1479,12 @@ class _RoomNavBarState extends State<RoomNavBar> {
             return const LinearGradient(
               begin: Alignment.centerLeft,
               end: Alignment.centerRight,
-              colors: [Colors.white, Colors.white, Colors.white, Colors.transparent],
+              colors: [
+                Colors.white,
+                Colors.white,
+                Colors.white,
+                Colors.transparent,
+              ],
               stops: [0.0, 0.7, 0.88, 1.0],
             ).createShader(bounds);
           },

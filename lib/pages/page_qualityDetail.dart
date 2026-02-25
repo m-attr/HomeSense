@@ -81,6 +81,200 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
     }
   }
 
+  // -----------------------------------------------------------------------
+  // Period chart data — consumption per day/month (Electricity & Water)
+  //                     temperature reading per day/month (Temperature)
+  // Values start near the middle of the Y range, not from zero.
+  // -----------------------------------------------------------------------
+
+  // --- Electricity (kWh) ---
+  List<double> _elecWeekData() => [8.2, 9.5, 7.8, 10.1, 9.3, 12.4, 11.0];
+  List<double> _elecMonthData() => [38, 42, 35, 46];
+  List<double> _elecYearData() => [
+    280,
+    310,
+    295,
+    330,
+    350,
+    390,
+    420,
+    405,
+    375,
+    340,
+    310,
+    290,
+  ];
+
+  // --- Water (L) ---
+  List<double> _waterWeekData() => [95, 110, 85, 120, 105, 140, 130];
+  List<double> _waterMonthData() => [450, 520, 480, 560];
+  List<double> _waterYearData() => [
+    3200,
+    3500,
+    3100,
+    3800,
+    4200,
+    4600,
+    5000,
+    4800,
+    4300,
+    3700,
+    3400,
+    3100,
+  ];
+
+  // --- Temperature (°C) — readings, not consumption ---
+  List<double> _tempWeekData() => [23.5, 24.2, 22.8, 25.1, 24.6, 23.0, 22.5];
+  List<double> _tempMonthData() => [23.0, 24.5, 25.2, 23.8];
+  List<double> _tempYearData() => [
+    18.5,
+    19.2,
+    21.0,
+    23.5,
+    26.0,
+    28.5,
+    30.2,
+    29.8,
+    27.0,
+    24.0,
+    20.5,
+    18.0,
+  ];
+
+  // -----------------------------------------------------------------------
+  // Today chart data — hourly snapshots throughout the day (no radio buttons)
+  // -----------------------------------------------------------------------
+
+  // Electricity: hourly kWh consumed today (24 h simplified to key hours)
+  List<double> _elecTodayData() => [
+    0.3,
+    0.2,
+    0.2,
+    0.1,
+    0.1,
+    0.4,
+    0.9,
+    1.2,
+    1.0,
+    0.8,
+    0.7,
+    0.6,
+    0.8,
+    0.9,
+    1.1,
+    1.3,
+    1.5,
+    1.8,
+    1.4,
+    1.0,
+    0.7,
+    0.5,
+    0.4,
+    0.3,
+  ];
+  List<String> _todayLabels() => [
+    '12a',
+    '2a',
+    '4a',
+    '6a',
+    '8a',
+    '10a',
+    '12p',
+    '2p',
+    '4p',
+    '6p',
+    '8p',
+    '10p',
+  ];
+
+  // Water: hourly litres consumed today
+  List<double> _waterTodayData() => [
+    2,
+    1,
+    1,
+    1,
+    3,
+    8,
+    15,
+    12,
+    8,
+    6,
+    5,
+    4,
+    6,
+    5,
+    4,
+    7,
+    10,
+    14,
+    12,
+    8,
+    5,
+    3,
+    2,
+    2,
+  ];
+
+  // Temperature: hourly °C readings today
+  List<double> _tempTodayData() => [
+    21.0,
+    20.5,
+    20.2,
+    19.8,
+    19.5,
+    20.0,
+    21.5,
+    23.0,
+    24.5,
+    25.8,
+    26.5,
+    27.0,
+    27.5,
+    28.0,
+    27.8,
+    27.2,
+    26.0,
+    24.5,
+    23.0,
+    22.0,
+    21.5,
+    21.0,
+    20.8,
+    20.5,
+  ];
+
+  /// Returns period-chart data for the given quality
+  Map<String, dynamic> _periodChartData(String q) {
+    final l = q.toLowerCase();
+    if (l.contains('electric')) {
+      return {
+        'week': _elecWeekData(),
+        'month': _elecMonthData(),
+        'year': _elecYearData(),
+      };
+    } else if (l.contains('water')) {
+      return {
+        'week': _waterWeekData(),
+        'month': _waterMonthData(),
+        'year': _waterYearData(),
+      };
+    } else {
+      return {
+        'week': _tempWeekData(),
+        'month': _tempMonthData(),
+        'year': _tempYearData(),
+      };
+    }
+  }
+
+  /// Returns today-chart data for the given quality
+  List<double> _todayChartData(String q) {
+    final l = q.toLowerCase();
+    if (l.contains('electric')) return _elecTodayData();
+    if (l.contains('water')) return _waterTodayData();
+    return _tempTodayData();
+  }
+
   List<Widget> _buildQualityNavButtons() {
     final qualities = widget.availableQualities;
     final List<Widget> buttons = [];
@@ -227,7 +421,7 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
                 children: [
                   const SizedBox(height: 16),
 
-                  // Section 1: Chart area
+                  // Section 1: Period chart (consumption / reading over time)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Container(
@@ -247,8 +441,70 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
                         borderRadius: BorderRadius.circular(16),
                         child: SizedBox(
                           height: 260,
-                          child: RealTimeChart(label: quality),
+                          child: Builder(
+                            builder: (_) {
+                              final d = _periodChartData(quality);
+                              return RealTimeChart(
+                                label: quality,
+                                weekData: d['week'] as List<double>,
+                                monthData: d['month'] as List<double>,
+                                yearData: d['year'] as List<double>,
+                              );
+                            },
+                          ),
                         ),
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // Section 1b: Today chart (hourly curve, no radio buttons)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                    child: Container(
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black12,
+                            blurRadius: 6,
+                            offset: Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                            child: Text(
+                              'Today',
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFF2D3142),
+                              ),
+                            ),
+                          ),
+                          ClipRRect(
+                            borderRadius: const BorderRadius.only(
+                              bottomLeft: Radius.circular(16),
+                              bottomRight: Radius.circular(16),
+                            ),
+                            child: SizedBox(
+                              height: 220,
+                              child: RealTimeChart(
+                                label: quality,
+                                showPeriodSelector: false,
+                                weekData: _todayChartData(quality),
+                                weekLabels: _todayLabels(),
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ),
                   ),
@@ -1111,40 +1367,31 @@ class _TempDeviceCardState extends State<_TempDeviceCard> {
       elevation: 4,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
       child: Padding(
-        padding: const EdgeInsets.all(12.0),
+        padding: const EdgeInsets.all(10.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Icon(Icons.thermostat, size: 28, color: accent),
+                const Icon(Icons.thermostat, size: 26, color: accent),
                 // 3-dot vertical menu button
                 GestureDetector(
                   onTap: _showTempSliderPopup,
                   child: Icon(
                     Icons.more_vert,
-                    size: 24,
+                    size: 22,
                     color: Colors.grey.shade600,
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 8),
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    widget.deviceName,
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ],
+            const SizedBox(height: 6),
+            Text(
+              widget.deviceName,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
             const Spacer(),
             Row(
@@ -1154,7 +1401,7 @@ class _TempDeviceCardState extends State<_TempDeviceCard> {
                   child: Text(
                     _setTemp.toStringAsFixed(1),
                     style: const TextStyle(
-                      fontSize: 22,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: accent,
                     ),
@@ -1163,7 +1410,7 @@ class _TempDeviceCardState extends State<_TempDeviceCard> {
                 const SizedBox(width: 4),
                 Text(
                   widget.unit,
-                  style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                  style: TextStyle(fontSize: 11, color: Colors.grey.shade600),
                 ),
               ],
             ),
