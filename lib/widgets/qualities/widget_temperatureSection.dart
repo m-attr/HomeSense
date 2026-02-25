@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../models/settings.dart';
+import '../../helpers/quality_helpers.dart';
 
 /// Temperature section widget for QualityDetailPage.
 /// Displays a large thermometer with dynamic fill (blue→red)
@@ -160,10 +161,14 @@ class _TemperatureSectionState extends State<TemperatureSection>
             width: double.infinity,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             decoration: BoxDecoration(
-              color: _comfortColor(widget.currentTemp).withValues(alpha: 0.08),
+              color: temperatureStatusColor(
+                widget.currentTemp,
+              ).withValues(alpha: 0.08),
               borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: _comfortColor(widget.currentTemp).withValues(alpha: 0.3),
+                color: temperatureStatusColor(
+                  widget.currentTemp,
+                ).withValues(alpha: 0.3),
                 width: 1.2,
               ),
             ),
@@ -173,38 +178,40 @@ class _TemperatureSectionState extends State<TemperatureSection>
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: _comfortColor(
+                    color: temperatureStatusColor(
                       widget.currentTemp,
                     ).withValues(alpha: 0.15),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    _comfortIcon(widget.currentTemp),
-                    color: _comfortColor(widget.currentTemp),
+                    temperatureStatusIcon(widget.currentTemp),
+                    color: temperatureStatusColor(widget.currentTemp),
                     size: 20,
                   ),
                 ),
                 const SizedBox(width: 12),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _comfortLabel(widget.currentTemp),
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: _comfortColor(widget.currentTemp),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        temperatureStatusLabel(widget.currentTemp),
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                          color: temperatureStatusColor(widget.currentTemp),
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _comfortDescription(widget.currentTemp),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: Colors.grey.shade600,
+                      const SizedBox(height: 2),
+                      Text(
+                        temperatureStatusDescription(widget.currentTemp),
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ],
             ),
@@ -213,38 +220,6 @@ class _TemperatureSectionState extends State<TemperatureSection>
         const SizedBox(height: 12),
       ],
     );
-  }
-
-  Color _comfortColor(double t) {
-    if (t < 16) return const Color(0xFF2196F3);
-    if (t < 20) return const Color(0xFF00BCD4);
-    if (t <= 26) return const Color(0xFF1EAA83);
-    if (t <= 30) return const Color(0xFFFF9800);
-    return const Color(0xFFF44336);
-  }
-
-  IconData _comfortIcon(double t) {
-    if (t < 16) return Icons.ac_unit;
-    if (t < 20) return Icons.air;
-    if (t <= 26) return Icons.check_circle_outline;
-    if (t <= 30) return Icons.wb_sunny_outlined;
-    return Icons.local_fire_department;
-  }
-
-  String _comfortLabel(double t) {
-    if (t < 16) return 'Too Cold';
-    if (t < 20) return 'Cool';
-    if (t <= 26) return 'Comfortable';
-    if (t <= 30) return 'Warm';
-    return 'Too Hot';
-  }
-
-  String _comfortDescription(double t) {
-    if (t < 16) return 'Below comfortable range';
-    if (t < 20) return 'Slightly cool';
-    if (t <= 26) return 'Ideal temperature';
-    if (t <= 30) return 'Getting warm';
-    return 'Above comfortable range';
   }
 }
 

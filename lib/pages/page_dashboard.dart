@@ -11,6 +11,7 @@ import '../widgets/widget_qualityCard.dart';
 import '../models/settings.dart';
 import '../widgets/widget_menuDrawer.dart';
 import '../widgets/widget_homeStatusChart.dart';
+import '../helpers/quality_helpers.dart';
 
 class DashboardPage extends StatefulWidget {
   const DashboardPage({super.key});
@@ -84,11 +85,11 @@ class _DashboardPageState extends State<DashboardPage> {
     {'Electricity', 'Water', 'Temperature'},
   ];
 
-  Color? _colorForValue(double value, double threshold) {
-    if (threshold <= 0) return const Color(0xFF1EAA83);
-    if (value >= threshold) return Colors.red;
-    if (value >= threshold * 0.8) return Colors.amber;
-    return null;
+  /// Colour based on unified quality thresholds.
+  /// [quality] is 'electricity', 'water', or 'temperature'.
+  /// Returns null when the value is in the green range.
+  Color? _colorForQuality(String quality, double value) {
+    return qualityColor(quality, value);
   }
 
   String _formattedDate() {
@@ -757,15 +758,10 @@ class _DashboardPageState extends State<DashboardPage> {
                                             child: QualityCard(
                                               qualityName: 'Electricity',
                                               qualityIcon: Icons.bolt,
-                                              qualityUnit: Settings
-                                                  .instance
-                                                  .energyUnit
-                                                  .split(' ')
-                                                  .first,
+                                              qualityUnit:
+                                                  electricityUnitLabel(),
                                               qualityValue: '-',
-                                              cardColor: const Color(
-                                                0xFFF5A623,
-                                              ),
+                                              cardColor: kElectricityColor,
                                               onViewDetails: () {
                                                 navigateWithLoading(
                                                   context,
@@ -792,15 +788,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                             child: QualityCard(
                                               qualityName: 'Water',
                                               qualityIcon: Icons.water,
-                                              qualityUnit: Settings
-                                                  .instance
-                                                  .waterUnit
-                                                  .split(' ')
-                                                  .first,
+                                              qualityUnit: waterUnitLabel(),
                                               qualityValue: '-',
-                                              cardColor: const Color(
-                                                0xFF42A5F5,
-                                              ),
+                                              cardColor: kWaterColor,
                                               onViewDetails: () {
                                                 navigateWithLoading(
                                                   context,
@@ -827,15 +817,10 @@ class _DashboardPageState extends State<DashboardPage> {
                                             child: QualityCard(
                                               qualityName: 'Temperature',
                                               qualityIcon: Icons.thermostat,
-                                              qualityUnit: Settings
-                                                  .instance
-                                                  .temperatureUnit
-                                                  .split(' ')
-                                                  .first,
+                                              qualityUnit:
+                                                  temperatureUnitLabel(),
                                               qualityValue: '-',
-                                              cardColor: const Color(
-                                                0xFFEF6C57,
-                                              ),
+                                              cardColor: kTemperatureColor,
                                               onViewDetails: () {
                                                 navigateWithLoading(
                                                   context,
@@ -881,18 +866,12 @@ class _DashboardPageState extends State<DashboardPage> {
                                         child: QualityCard(
                                           qualityName: 'Electricity',
                                           qualityIcon: Icons.bolt,
-                                          qualityUnit: Settings
-                                              .instance
-                                              .energyUnit
-                                              .split(' ')
-                                              .first,
-                                          qualityValue: elec.toStringAsFixed(1),
-                                          cardColor: const Color(0xFFF5A623),
-                                          valueColor: _colorForValue(
+                                          qualityUnit: electricityUnitLabel(),
+                                          qualityValue: formatElectricity(elec),
+                                          cardColor: kElectricityColor,
+                                          valueColor: _colorForQuality(
+                                            'electricity',
                                             elec,
-                                            Settings
-                                                .instance
-                                                .electricityThreshold,
                                           ),
                                           threshold: Settings
                                               .instance
@@ -929,18 +908,12 @@ class _DashboardPageState extends State<DashboardPage> {
                                           return QualityCard(
                                             qualityName: 'Water',
                                             qualityIcon: Icons.water,
-                                            qualityUnit: Settings
-                                                .instance
-                                                .waterUnit
-                                                .split(' ')
-                                                .first,
-                                            qualityValue: water
-                                                .round()
-                                                .toString(),
-                                            cardColor: const Color(0xFF42A5F5),
-                                            valueColor: _colorForValue(
+                                            qualityUnit: waterUnitLabel(),
+                                            qualityValue: formatWater(water),
+                                            cardColor: kWaterColor,
+                                            valueColor: _colorForQuality(
+                                              'water',
                                               water,
-                                              Settings.instance.waterThreshold,
                                             ),
                                             threshold: Settings
                                                 .instance
@@ -980,20 +953,14 @@ class _DashboardPageState extends State<DashboardPage> {
                                           return QualityCard(
                                             qualityName: 'Temperature',
                                             qualityIcon: Icons.thermostat,
-                                            qualityUnit: Settings
-                                                .instance
-                                                .temperatureUnit
-                                                .split(' ')
-                                                .first,
-                                            qualityValue: temp.toStringAsFixed(
-                                              1,
-                                            ),
-                                            cardColor: const Color(0xFFEF6C57),
-                                            valueColor: _colorForValue(
+                                            qualityUnit: temperatureUnitLabel(),
+                                            qualityValue: formatTemperature(
                                               temp,
-                                              Settings
-                                                  .instance
-                                                  .temperatureThreshold,
+                                            ),
+                                            cardColor: kTemperatureColor,
+                                            valueColor: _colorForQuality(
+                                              'temperature',
+                                              temp,
                                             ),
                                             threshold: Settings
                                                 .instance

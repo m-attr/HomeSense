@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import '../../models/settings.dart';
+import '../../helpers/quality_helpers.dart';
 
 /// Water section widget for QualityDetailPage.
-/// Displays a gradient donut chart (blue→red = low→high usage)
-/// with current water consumption and related stats.
+/// Displays a large water-droplet widget filled to the current usage fraction
+/// with today's consumption in mL/L and the percentage of the daily goal.
 class WaterSection extends StatefulWidget {
-  final double currentUsage; // current reading in litres
-  final double maxUsage; // scale maximum
+  final double currentUsage; // current reading in litres (today's total)
+  final double maxUsage; // scale maximum (for gauge, not the goal)
 
   const WaterSection({
     super.key,
@@ -29,7 +30,7 @@ class _WaterSectionState extends State<WaterSection>
     super.initState();
     _ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 1200),
     );
     _anim = CurvedAnimation(parent: _ctrl, curve: Curves.easeOutCubic);
     _ctrl.addListener(() {
@@ -54,41 +55,94 @@ class _WaterSectionState extends State<WaterSection>
     super.dispose();
   }
 
+  String _formatUsage(double litres) {
+    final unit = Settings.instance.waterUnit;
+    if (unit.contains('m³')) {
+      return '${(litres / 1000).toStringAsFixed(3)} m³';
+    }
+    // Always show in litres as that's the base unit when 'Litres' is selected
+    if (litres < 1.0) {
+      return '${(litres * 1000).toStringAsFixed(0)} mL';
+    }
+    return '${litres.toStringAsFixed(1)} L';
+  }
+
+  String _formatGoal(double litres) {
+    final unit = Settings.instance.waterUnit;
+    if (unit.contains('m³')) {
+      return '${(litres / 1000).toStringAsFixed(2)} m³';
+    }
+    return '${litres.toStringAsFixed(0)} L';
+  }
+
   @override
   Widget build(BuildContext context) {
-    final unit = Settings.instance.waterUnit.split(' ').first;
-    final fraction =
-        (widget.currentUsage / widget.maxUsage).clamp(0.0, 1.0);
+    final double goal = Settings.instance.waterThreshold;
+    final double fraction = (widget.currentUsage / goal).clamp(0.0, 1.5);
+    final double animFraction = fraction * _anim.value;
+    final int percentage = (animFraction * 100).round();
+
+    // Use unified status colour from quality_helpers
+    final Color statusCol = waterStatusColor(widget.currentUsage);
+    final String statusLbl = waterStatusLabel(widget.currentUsage);
+    final IconData statusIcn = waterStatusIcon(widget.currentUsage);
+    final String statusDesc = waterStatusDescription(widget.currentUsage);
+
+    // Droplet fill colour based on unified thresholds
+    Color dropletColor;
+    Color accentColor;
+    if (statusCol == kStatusGreen) {
+      dropletColor = const Color(0xFF42A5F5);
+      accentColor = const Color(0xFF1E88E5);
+    } else if (statusCol == kStatusAmber) {
+      dropletColor = const Color(0xFF29B6F6);
+      accentColor = const Color(0xFF039BE5);
+    } else if (statusCol == kStatusOrange) {
+      dropletColor = const Color(0xFF26A69A);
+      accentColor = const Color(0xFF00897B);
+    } else {
+      dropletColor = const Color(0xFFEF5350);
+      accentColor = const Color(0xFFE53935);
+    }
 
     return Column(
       children: [
-        const SizedBox(height: 12),
-        // Gradient donut chart
+        const SizedBox(height: 20),
+
+        // Water droplet widget
         SizedBox(
-          width: 220,
-          height: 200,
+          width: 180,
+          height: 220,
           child: CustomPaint(
-            painter: _WaterGradientDonutPainter(
-              fraction: fraction * _anim.value,
+            painter: _WaterDropletPainter(
+              fillFraction: animFraction.clamp(0.0, 1.0),
+              fillColor: dropletColor,
+              wavePhase: _anim.value * math.pi * 2,
             ),
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.only(top: 20),
+                padding: const EdgeInsets.only(top: 50),
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
+                    // Today's consumption in mL/L
                     Text(
-                      '${widget.currentUsage.toStringAsFixed(0)}',
-                      style: const TextStyle(
-                        fontSize: 36,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      unit,
+                      _formatUsage(widget.currentUsage),
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.grey.shade600,
+                        fontWeight: FontWeight.w500,
+                        color: Colors.white.withValues(alpha: 0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    // Percentage of daily goal
+                    Text(
+                      '$percentage%',
+                      style: const TextStyle(
+                        fontSize: 38,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        height: 1.1,
                       ),
                     ),
                   ],
@@ -97,42 +151,56 @@ class _WaterSectionState extends State<WaterSection>
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        // Stats row
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              _statColumn(
-                  Icons.water_drop, 'Avg', '105 $unit', Colors.blue),
-              _statColumn(
-                  Icons.arrow_downward, 'Low', '60 $unit', Colors.lightBlue),
-              _statColumn(
-                  Icons.arrow_upward, 'High', '180 $unit', Colors.red),
-            ],
-          ),
+        const SizedBox(height: 20),
+
+        // Daily goal display
+        Column(
+          children: [
+            Text(
+              _formatGoal(goal),
+              style: TextStyle(
+                fontSize: 28,
+                fontWeight: FontWeight.bold,
+                color: accentColor,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              'Daily Goal',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w500,
+                color: Colors.grey.shade500,
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        // Usage indicator
+        const SizedBox(height: 16),
+
+        // Usage status indicator
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
-              color: _usageColor(fraction).withAlpha(25),
-              borderRadius: BorderRadius.circular(12),
+              color: statusCol.withValues(alpha: 0.08),
+              borderRadius: BorderRadius.circular(14),
               border: Border.all(
-                color: _usageColor(fraction).withAlpha(80),
+                color: statusCol.withValues(alpha: 0.25),
+                width: 1.2,
               ),
             ),
             child: Row(
               children: [
-                Icon(
-                  _usageIcon(fraction),
-                  color: _usageColor(fraction),
-                  size: 28,
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: statusCol.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(statusIcn, color: statusCol, size: 20),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -140,17 +208,20 @@ class _WaterSectionState extends State<WaterSection>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _usageLabel(fraction),
+                        statusLbl,
                         style: TextStyle(
+                          fontSize: 13,
                           fontWeight: FontWeight.w600,
-                          color: _usageColor(fraction),
+                          color: statusCol,
                         ),
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        _usageDescription(fraction),
+                        statusDesc,
                         style: TextStyle(
-                            fontSize: 12, color: Colors.grey.shade700),
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                     ],
                   ),
@@ -159,108 +230,129 @@ class _WaterSectionState extends State<WaterSection>
             ),
           ),
         ),
+        const SizedBox(height: 8),
       ],
     );
-  }
-
-  Widget _statColumn(
-      IconData icon, String label, String value, Color color) {
-    return Column(
-      children: [
-        Icon(icon, color: color, size: 22),
-        const SizedBox(height: 4),
-        Text(label,
-            style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
-        const SizedBox(height: 2),
-        Text(value,
-            style:
-                const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-      ],
-    );
-  }
-
-  Color _usageColor(double f) {
-    if (f < 0.4) return const Color(0xFF1EAA83);
-    if (f < 0.7) return Colors.orange;
-    return Colors.red;
-  }
-
-  IconData _usageIcon(double f) {
-    if (f < 0.4) return Icons.check_circle_outline;
-    if (f < 0.7) return Icons.info_outline;
-    return Icons.warning_amber_rounded;
-  }
-
-  String _usageLabel(double f) {
-    if (f < 0.4) return 'Low Usage';
-    if (f < 0.7) return 'Moderate Usage';
-    return 'High Usage';
-  }
-
-  String _usageDescription(double f) {
-    if (f < 0.4) return 'Water consumption is well within limits.';
-    if (f < 0.7) return 'Water usage is moderate — keep monitoring.';
-    return 'Water consumption is high — consider reducing.';
   }
 }
 
 // ---------------------------------------------------------------------------
-// Gradient donut painter — 3/5 arc, blue→red gradient (cold→hot)
-// Same geometry as HomeStatusChart
+// Water droplet painter — teardrop shape with animated fill & wave
 // ---------------------------------------------------------------------------
-const double _kWaterSweep = (3.0 / 5.0) * 2.0 * math.pi; // 216°
-const double _kWaterStart = -math.pi / 2 - (_kWaterSweep / 2);
+class _WaterDropletPainter extends CustomPainter {
+  final double fillFraction; // 0..1
+  final Color fillColor;
+  final double wavePhase;
 
-class _WaterGradientDonutPainter extends CustomPainter {
-  final double fraction; // 0..1
-
-  _WaterGradientDonutPainter({required this.fraction});
+  _WaterDropletPainter({
+    required this.fillFraction,
+    required this.fillColor,
+    this.wavePhase = 0.0,
+  });
 
   @override
   void paint(Canvas canvas, Size size) {
-    const double strokeWidth = 26.0;
-    final double totalW = size.width;
-    final double radius = (totalW - strokeWidth) / 2.0;
-    if (radius <= 0) return;
-    final center = Offset(totalW / 2, radius + 10);
-    final rect = Rect.fromCircle(center: center, radius: radius);
+    final double w = size.width;
+    final double h = size.height;
 
-    // Unfilled track
-    final bgPaint = Paint()
-      ..color = const Color(0xFFEFEFEF)
+    // Build droplet path — pointed top, rounded bottom
+    final Path droplet = _buildDropletPath(w, h);
+
+    // Outline shadow
+    canvas.drawShadow(droplet, Colors.black26, 6, false);
+
+    // Clip to droplet shape
+    canvas.save();
+    canvas.clipPath(droplet);
+
+    // Light background
+    final bgPaint = Paint()..color = fillColor.withValues(alpha: 0.12);
+    canvas.drawRect(Rect.fromLTWH(0, 0, w, h), bgPaint);
+
+    // Water fill — rises from bottom
+    if (fillFraction > 0) {
+      final double fillTop =
+          h * (1.0 - fillFraction * 0.82); // 82% of height max
+
+      // Subtle wave at the water surface
+      final wavePath = Path();
+      wavePath.moveTo(0, fillTop);
+      for (double x = 0; x <= w; x += 1) {
+        final waveY = fillTop + math.sin((x / w) * math.pi * 3 + wavePhase) * 3;
+        wavePath.lineTo(x, waveY);
+      }
+      wavePath.lineTo(w, h);
+      wavePath.lineTo(0, h);
+      wavePath.close();
+
+      // Gradient fill — darker at bottom
+      final fillPaint = Paint()
+        ..shader = LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [fillColor.withValues(alpha: 0.7), fillColor],
+        ).createShader(Rect.fromLTWH(0, fillTop, w, h - fillTop));
+
+      canvas.drawPath(wavePath, fillPaint);
+    }
+
+    canvas.restore();
+
+    // Droplet border
+    final borderPaint = Paint()
+      ..color = fillColor.withValues(alpha: 0.4)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
-    canvas.drawArc(rect, _kWaterStart, _kWaterSweep, false, bgPaint);
+      ..strokeWidth = 2.5;
+    canvas.drawPath(droplet, borderPaint);
 
-    // Gradient fill: blue → red
-    final fillSweep = (_kWaterSweep * fraction).clamp(0.0, _kWaterSweep);
-    if (fillSweep <= 0) return;
-
-    final gradient = SweepGradient(
-      startAngle: _kWaterStart,
-      endAngle: _kWaterStart + _kWaterSweep,
-      colors: const [
-        Color(0xFF2196F3), // blue — cold / low
-        Color(0xFF00BCD4), // cyan
-        Color(0xFF4CAF50), // green
-        Color(0xFFFFEB3B), // yellow
-        Color(0xFFFF9800), // orange
-        Color(0xFFF44336), // red — hot / high
-      ],
-      stops: const [0.0, 0.2, 0.4, 0.6, 0.8, 1.0],
+    // Small highlight reflection on upper left
+    final highlightPaint = Paint()
+      ..color = Colors.white.withValues(alpha: 0.35)
+      ..style = PaintingStyle.fill;
+    canvas.drawOval(
+      Rect.fromCenter(
+        center: Offset(w * 0.32, h * 0.42),
+        width: 14,
+        height: 22,
+      ),
+      highlightPaint,
     );
+  }
 
-    final gradPaint = Paint()
-      ..shader = gradient.createShader(rect)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = strokeWidth
-      ..strokeCap = StrokeCap.round;
+  Path _buildDropletPath(double w, double h) {
+    final path = Path();
+    // Tip at top center
+    final double tipX = w / 2;
+    final double tipY = h * 0.05;
+    // Body center
+    final double bodyY = h * 0.58;
+    final double bodyR = w * 0.46;
 
-    canvas.drawArc(rect, _kWaterStart, fillSweep, false, gradPaint);
+    path.moveTo(tipX, tipY);
+    // Right curve from tip down to body
+    path.cubicTo(
+      tipX + w * 0.04,
+      h * 0.22,
+      tipX + bodyR,
+      h * 0.36,
+      tipX + bodyR,
+      bodyY,
+    );
+    // Bottom arc
+    path.arcToPoint(
+      Offset(tipX - bodyR, bodyY),
+      radius: Radius.circular(bodyR),
+      clockwise: true,
+    );
+    // Left curve from body back up to tip
+    path.cubicTo(tipX - bodyR, h * 0.36, tipX - w * 0.04, h * 0.22, tipX, tipY);
+    path.close();
+    return path;
   }
 
   @override
-  bool shouldRepaint(covariant _WaterGradientDonutPainter old) =>
-      old.fraction != fraction;
+  bool shouldRepaint(covariant _WaterDropletPainter old) =>
+      old.fillFraction != fillFraction ||
+      old.fillColor != fillColor ||
+      old.wavePhase != wavePhase;
 }

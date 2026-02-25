@@ -208,19 +208,18 @@ class _RealTimeChartState extends State<RealTimeChart>
                               horizontal: 8.0,
                             ),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 6.0,
-                                vertical: 4.0,
-                              ),
+                              padding: const EdgeInsets.all(3.0),
                               decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(8.0),
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(20),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   _periodRadio(ChartPeriod.week, 'Week'),
+                                  const SizedBox(width: 2),
                                   _periodRadio(ChartPeriod.month, 'Month'),
+                                  const SizedBox(width: 2),
                                   _periodRadio(ChartPeriod.year, 'Year'),
                                 ],
                               ),
@@ -294,22 +293,27 @@ class _RealTimeChartState extends State<RealTimeChart>
   }
 
   Widget _periodRadio(ChartPeriod p, String label) {
-    return Row(
-      children: [
-        Radio<ChartPeriod>(
-          value: p,
-          groupValue: _period,
-          activeColor: const Color(0xFF1EAA83),
-          onChanged: (v) {
-            if (v == null) return;
-            _switchPeriod(v);
-          },
+    final bool isActive = _period == p;
+    const Color green = Color(0xFF1EAA83);
+    return GestureDetector(
+      onTap: () => _switchPeriod(p),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+        decoration: BoxDecoration(
+          color: isActive ? green : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
         ),
-        Text(
+        child: Text(
           label,
-          style: const TextStyle(color: Color(0xFF1EAA83), fontSize: 12),
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+            color: isActive ? Colors.white : Colors.grey.shade600,
+          ),
         ),
-      ],
+      ),
     );
   }
 }

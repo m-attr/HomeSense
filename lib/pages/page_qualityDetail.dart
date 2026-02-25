@@ -3,9 +3,10 @@ import '../helpers/nav_helper.dart';
 import '../widgets/widget_fixedChart.dart';
 import '../widgets/widget_qualityDeviceCard.dart';
 import '../widgets/widget_tempArcSlider.dart';
-import '../models/settings.dart';
 import '../widgets/qualities/widget_temperatureSection.dart';
 import '../widgets/qualities/widget_waterSection.dart';
+import '../widgets/qualities/widget_electricitySection.dart';
+import '../helpers/quality_helpers.dart';
 
 class QualityDetailPage extends StatefulWidget {
   final String room;
@@ -306,13 +307,13 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
       String unit;
       IconData leftIcon;
       if (quality.toLowerCase().contains('electric')) {
-        unit = Settings.instance.energyUnit.split(' ').first;
+        unit = electricityUnitLabel();
         leftIcon = Icons.bolt;
       } else if (quality.toLowerCase().contains('water')) {
-        unit = Settings.instance.waterUnit.split(' ').first;
+        unit = waterUnitLabel();
         leftIcon = Icons.water;
       } else {
-        unit = Settings.instance.temperatureUnit.split(' ').first;
+        unit = temperatureUnitLabel();
         leftIcon = Icons.thermostat;
       }
 
@@ -587,31 +588,31 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Quality-specific section widget in styled container
-        if (quality.toLowerCase().contains('water') ||
-            quality.toLowerCase().contains('temperature'))
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 6,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 4.0),
-                child: quality.toLowerCase().contains('water')
-                    ? const WaterSection()
-                    : const TemperatureSection(),
-              ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Container(
+            width: double.infinity,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 6,
+                  offset: Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4.0),
+              child: quality.toLowerCase().contains('electric')
+                  ? const ElectricitySection()
+                  : quality.toLowerCase().contains('water')
+                  ? const WaterSection()
+                  : const TemperatureSection(),
             ),
           ),
+        ),
 
         const SizedBox(height: 16),
 

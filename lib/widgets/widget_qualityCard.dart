@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../helpers/quality_helpers.dart';
 
 class QualityCard extends StatelessWidget {
   final String qualityName;
@@ -28,14 +29,24 @@ class QualityCard extends StatelessWidget {
   static const Color _dark = Color(0xFF2D3142);
 
   String _statusLabel(Color c) {
-    if (c == Colors.red) return 'High';
-    if (c == Colors.amber) return 'Moderate';
+    if (c == kStatusRed || c == Colors.red) return 'High';
+    if (c == kStatusOrange ||
+        c == Colors.orange ||
+        c == const Color(0xFFFF9800))
+      return 'Elevated';
+    if (c == kStatusAmber || c == Colors.amber || c == const Color(0xFFFFC107))
+      return 'Moderate';
     return 'Normal';
   }
 
   IconData _statusIcon(Color c) {
-    if (c == Colors.red) return Icons.warning_amber_rounded;
-    if (c == Colors.amber) return Icons.trending_up_rounded;
+    if (c == kStatusRed || c == Colors.red) return Icons.dangerous_outlined;
+    if (c == kStatusOrange ||
+        c == Colors.orange ||
+        c == const Color(0xFFFF9800))
+      return Icons.warning_amber_rounded;
+    if (c == kStatusAmber || c == Colors.amber || c == const Color(0xFFFFC107))
+      return Icons.trending_up_rounded;
     return Icons.check_circle_outline;
   }
 
