@@ -32,52 +32,43 @@ class _DashboardPageState extends State<DashboardPage> {
   // Home health score (1–100) — dynamically computed from all room data
   int get _homeScore => computeHomeScore();
 
-  /// Status colour based on score bracket
+  /// Status colour based on score bracket (3 tiers)
   Color get _scoreColor {
-    if (_homeScore >= 80) return const Color(0xFF1EAA83); // green — Excellent
-    if (_homeScore >= 60)
-      return const Color(0xFFFFC107); // amber — Below Optimal
-    if (_homeScore >= 40)
-      return const Color(0xFFFF9800); // orange — Needs Attention
-    return const Color(0xFFF44336); // red — Critical
+    if (_homeScore >= 67) return const Color(0xFF1EAA83); // green — Good
+    if (_homeScore >= 34) return const Color(0xFFFFC107); // amber — Fair
+    return const Color(0xFFF44336); // red — Poor
   }
 
-  /// Short label for the current score bracket
+  /// Short label for the current score bracket (3 tiers)
   String get _scoreLabel {
-    if (_homeScore >= 80) return 'Excellent';
-    if (_homeScore >= 60) return 'Below Optimal';
-    if (_homeScore >= 40) return 'Needs Attention';
-    return 'Critical';
+    if (_homeScore >= 67) return 'Good';
+    if (_homeScore >= 34) return 'Fair';
+    return 'Poor';
   }
 
-  /// Subtitle shown under the status indicator
+  /// Subtitle shown under the status indicator (3 tiers)
   String get _scoreSubtitle {
-    if (_homeScore >= 80) return 'All systems running smoothly';
-    if (_homeScore >= 60) return 'Improvements recommended';
-    if (_homeScore >= 40) return 'Several areas need attention';
+    if (_homeScore >= 67) return 'All systems running smoothly';
+    if (_homeScore >= 34) return 'Some areas need attention';
     return 'Immediate action required';
   }
 
-  /// Icon for the status bracket
+  /// Icon for the status bracket (3 tiers)
   IconData get _scoreIcon {
-    if (_homeScore >= 80) return Icons.check_circle_outline;
-    if (_homeScore >= 60) return Icons.warning_amber_rounded;
-    if (_homeScore >= 40) return Icons.error_outline;
-    return Icons.dangerous_outlined;
+    if (_homeScore >= 67) return Icons.check_circle_outline;
+    if (_homeScore >= 34) return Icons.warning_amber_rounded;
+    return Icons.error_outline;
   }
 
-  /// Long description for the status popup
+  /// Long description for the status popup (3 tiers)
   String get _scoreDescription {
-    if (_homeScore >= 80) {
+    if (_homeScore >= 67) {
       return 'Your home environment is in great shape! Temperature, energy, and water usage are all within optimal ranges, ensuring maximum comfort and efficiency.';
     }
-    if (_homeScore >= 60) {
-      return 'Your home environment is functional but has room for improvement. Some conditions — such as temperature, humidity, or energy usage — may not be at their ideal levels, affecting comfort and efficiency.';
+    if (_homeScore >= 34) {
+      return 'Your home environment is functional but has room for improvement. Some conditions — such as temperature, energy usage, or water consumption — may not be at their ideal levels.';
     }
-    if (_homeScore >= 40) {
-      return 'Several aspects of your home environment need attention. Energy consumption or water usage may be higher than recommended, and temperature readings could be outside comfortable ranges.';
-    }
-    return 'Your home environment requires immediate attention. Multiple readings are outside safe or comfortable ranges. Please review device status and environmental conditions urgently.';
+    return 'Your home environment requires attention. Multiple readings are outside safe or comfortable ranges. Please review device status and environmental conditions.';
   }
 
   // Rooms list — always reflects the global allRooms (includes user-created)
@@ -752,250 +743,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                   setState(() => _selectedRoomIndex = i),
                             ),
                             const SizedBox(height: 12),
-                            // If this room has no data, show cards with '-' for selected qualities
-                            if (_roomDataAt(_selectedRoomIndex) == null ||
-                                !roomHasData(_roomDataAt(_selectedRoomIndex)!))
-                              SizedBox(
-                                height: 220,
-                                child: ListView(
-                                  scrollDirection: Axis.horizontal,
-                                  children: [
-                                    const SizedBox(width: 8),
-                                    ...(() {
-                                      final rd = _roomDataAt(
-                                        _selectedRoomIndex,
-                                      );
-                                      final quals = rd?.qualities ?? <String>{};
-                                      final room = rd?.name ?? 'Room';
-                                      final List<Widget> cards = [];
-                                      if (quals.contains('Electricity')) {
-                                        cards.add(
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6.0,
-                                            ),
-                                            child: QualityCard(
-                                              qualityName: 'Electricity',
-                                              qualityIcon: Icons.bolt,
-                                              qualityUnit:
-                                                  electricityUnitLabel(),
-                                              qualityValue: '-',
-                                              cardColor: kElectricityColor,
-                                              onViewDetails: () {
-                                                navigateWithLoading(
-                                                  context,
-                                                  destination:
-                                                      QualityDetailPage(
-                                                        room: room,
-                                                        quality: 'Electricity',
-                                                        hasDevices: false,
-                                                        availableQualities:
-                                                            quals.toList(),
-                                                      ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      if (quals.contains('Water')) {
-                                        cards.add(
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6.0,
-                                            ),
-                                            child: QualityCard(
-                                              qualityName: 'Water',
-                                              qualityIcon: Icons.water,
-                                              qualityUnit: waterUnitLabel(),
-                                              qualityValue: '-',
-                                              cardColor: kWaterColor,
-                                              onViewDetails: () {
-                                                navigateWithLoading(
-                                                  context,
-                                                  destination:
-                                                      QualityDetailPage(
-                                                        room: room,
-                                                        quality: 'Water',
-                                                        hasDevices: false,
-                                                        availableQualities:
-                                                            quals.toList(),
-                                                      ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      if (quals.contains('Temperature')) {
-                                        cards.add(
-                                          Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 6.0,
-                                            ),
-                                            child: QualityCard(
-                                              qualityName: 'Temperature',
-                                              qualityIcon: Icons.thermostat,
-                                              qualityUnit:
-                                                  temperatureUnitLabel(),
-                                              qualityValue: '-',
-                                              cardColor: kTemperatureColor,
-                                              onViewDetails: () {
-                                                navigateWithLoading(
-                                                  context,
-                                                  destination:
-                                                      QualityDetailPage(
-                                                        room: room,
-                                                        quality: 'Temperature',
-                                                        hasDevices: false,
-                                                        availableQualities:
-                                                            quals.toList(),
-                                                      ),
-                                                );
-                                              },
-                                            ),
-                                          ),
-                                        );
-                                      }
-                                      return cards;
-                                    })(),
-                                    const SizedBox(width: 8),
-                                  ],
-                                ),
-                              )
-                            else
-                              SizedBox(
-                                height: 220,
-                                child: Builder(
-                                  builder: (context) {
-                                    final rd = _roomDataAt(_selectedRoomIndex);
-                                    if (rd == null) return const SizedBox();
-                                    final room = rd.name;
-                                    final quals = rd.qualities;
-                                    final List<Widget> cards = [];
-                                    if (quals.contains('Electricity')) {
-                                      final elec = rd.electricity;
-                                      cards.add(
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6.0,
-                                          ),
-                                          child: QualityCard(
-                                            qualityName: 'Electricity',
-                                            qualityIcon: Icons.bolt,
-                                            qualityUnit: electricityUnitLabel(),
-                                            qualityValue: formatElectricity(
-                                              elec,
-                                            ),
-                                            cardColor: kElectricityColor,
-                                            valueColor: _colorForQuality(
-                                              'electricity',
-                                              elec,
-                                            ),
-                                            threshold: Settings
-                                                .instance
-                                                .electricityThreshold,
-                                            onViewDetails: () {
-                                              navigateWithLoading(
-                                                context,
-                                                destination: QualityDetailPage(
-                                                  room: room,
-                                                  quality: 'Electricity',
-                                                  availableQualities: quals
-                                                      .toList(),
-                                                  roomIndex: _selectedRoomIndex,
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                    if (quals.contains('Water')) {
-                                      final water = rd.water;
-                                      cards.add(
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6.0,
-                                          ),
-                                          child: QualityCard(
-                                            qualityName: 'Water',
-                                            qualityIcon: Icons.water,
-                                            qualityUnit: waterUnitLabel(),
-                                            qualityValue: formatWater(water),
-                                            cardColor: kWaterColor,
-                                            valueColor: _colorForQuality(
-                                              'water',
-                                              water,
-                                            ),
-                                            threshold: Settings
-                                                .instance
-                                                .waterThreshold,
-                                            onViewDetails: () {
-                                              navigateWithLoading(
-                                                context,
-                                                destination: QualityDetailPage(
-                                                  room: room,
-                                                  quality: 'Water',
-                                                  availableQualities: quals
-                                                      .toList(),
-                                                  roomIndex: _selectedRoomIndex,
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                    if (quals.contains('Temperature')) {
-                                      final temp = rd.temperature;
-                                      cards.add(
-                                        Padding(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 6.0,
-                                          ),
-                                          child: QualityCard(
-                                            qualityName: 'Temperature',
-                                            qualityIcon: Icons.thermostat,
-                                            qualityUnit: temperatureUnitLabel(),
-                                            qualityValue: formatTemperature(
-                                              temp,
-                                            ),
-                                            cardColor: kTemperatureColor,
-                                            valueColor: _colorForQuality(
-                                              'temperature',
-                                              temp,
-                                            ),
-                                            threshold: Settings
-                                                .instance
-                                                .temperatureThreshold,
-                                            onViewDetails: () {
-                                              navigateWithLoading(
-                                                context,
-                                                destination: QualityDetailPage(
-                                                  room: room,
-                                                  quality: 'Temperature',
-                                                  availableQualities: quals
-                                                      .toList(),
-                                                  roomIndex: _selectedRoomIndex,
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                        ),
-                                      );
-                                    }
-                                    return ListView(
-                                      scrollDirection: Axis.horizontal,
-                                      children: [
-                                        const SizedBox(width: 8),
-                                        ...cards,
-                                        const SizedBox(width: 8),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ),
+                            _buildRoomCards(),
                             const SizedBox(height: 24),
                             SizedBox(
                               width: double.infinity,
@@ -1113,43 +861,62 @@ class _DashboardPageState extends State<DashboardPage> {
           if (_showWelcomeBanner)
             Positioned(
               top: MediaQuery.of(context).padding.top + 12,
-              left: 16,
-              right: 16,
-              child: Material(
-                color: Colors.transparent,
-                child: AnimatedOpacity(
-                  opacity: _showWelcomeBanner ? 1.0 : 0.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border(
-                        left: BorderSide(
-                          color: const Color(0xFF1EAA83),
-                          width: 6,
-                        ),
+              left: 0,
+              right: 0,
+              child: Center(
+                child: Material(
+                  color: Colors.transparent,
+                  child: AnimatedOpacity(
+                    opacity: _showWelcomeBanner ? 1.0 : 0.0,
+                    duration: const Duration(milliseconds: 300),
+                    child: Container(
+                      constraints: const BoxConstraints(maxWidth: 300),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.12),
+                            blurRadius: 16,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
                       ),
-                      boxShadow: [
-                        BoxShadow(color: Colors.black26, blurRadius: 6),
-                      ],
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 12,
-                      horizontal: 12,
-                    ),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            'Welcome back, ${UserRepository.instance.currentUser?.fullName ?? ''}',
-                            style: const TextStyle(
-                              color: Colors.black87,
-                              fontWeight: FontWeight.w600,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 10,
+                        horizontal: 14,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF1EAA83).withValues(alpha: 0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(
+                              Icons.waving_hand,
+                              size: 16,
+                              color: Color(0xFF1EAA83),
                             ),
                           ),
-                        ),
-                      ],
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Welcome back, ${UserRepository.instance.currentUser?.fullName ?? ''}',
+                              style: const TextStyle(
+                                color: Color(0xFF2D3142),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1353,6 +1120,192 @@ class _DashboardPageState extends State<DashboardPage> {
       ),
     );
   }
+
+  /// Builds the quality cards for the selected room.
+  Widget _buildRoomCards() {
+    final rd = _roomDataAt(_selectedRoomIndex);
+    final bool hasData = rd != null && roomHasData(rd);
+    final quals = rd?.qualities ?? <String>{};
+    final room = rd?.name ?? 'Room';
+    final List<Widget> cards = [];
+
+    if (quals.contains('Electricity')) {
+      if (hasData) {
+        final elec = rd.electricity;
+        cards.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            child: QualityCard(
+              qualityName: 'Electricity',
+              qualityIcon: Icons.bolt,
+              qualityUnit: electricityUnitLabel(),
+              qualityValue: formatElectricity(elec),
+              cardColor: kElectricityColor,
+              valueColor: _colorForQuality('electricity', elec),
+              threshold: Settings.instance.electricityThreshold,
+              onViewDetails: () {
+                navigateWithLoading(
+                  context,
+                  destination: QualityDetailPage(
+                    room: room,
+                    quality: 'Electricity',
+                    availableQualities: quals.toList(),
+                    roomIndex: _selectedRoomIndex,
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      } else {
+        cards.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            child: QualityCard(
+              qualityName: 'Electricity',
+              qualityIcon: Icons.bolt,
+              qualityUnit: electricityUnitLabel(),
+              qualityValue: '-',
+              cardColor: kElectricityColor,
+              onViewDetails: () {
+                navigateWithLoading(
+                  context,
+                  destination: QualityDetailPage(
+                    room: room,
+                    quality: 'Electricity',
+                    hasDevices: false,
+                    availableQualities: quals.toList(),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }
+    }
+
+    if (quals.contains('Water')) {
+      if (hasData) {
+        final water = rd.water;
+        cards.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            child: QualityCard(
+              qualityName: 'Water',
+              qualityIcon: Icons.water,
+              qualityUnit: waterUnitLabel(),
+              qualityValue: formatWater(water),
+              cardColor: kWaterColor,
+              valueColor: _colorForQuality('water', water),
+              threshold: Settings.instance.waterThreshold,
+              onViewDetails: () {
+                navigateWithLoading(
+                  context,
+                  destination: QualityDetailPage(
+                    room: room,
+                    quality: 'Water',
+                    availableQualities: quals.toList(),
+                    roomIndex: _selectedRoomIndex,
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      } else {
+        cards.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            child: QualityCard(
+              qualityName: 'Water',
+              qualityIcon: Icons.water,
+              qualityUnit: waterUnitLabel(),
+              qualityValue: '-',
+              cardColor: kWaterColor,
+              onViewDetails: () {
+                navigateWithLoading(
+                  context,
+                  destination: QualityDetailPage(
+                    room: room,
+                    quality: 'Water',
+                    hasDevices: false,
+                    availableQualities: quals.toList(),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }
+    }
+
+    if (quals.contains('Temperature')) {
+      if (hasData) {
+        final temp = rd.temperature;
+        cards.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            child: QualityCard(
+              qualityName: 'Temperature',
+              qualityIcon: Icons.thermostat,
+              qualityUnit: temperatureUnitLabel(),
+              qualityValue: formatTemperature(temp),
+              cardColor: kTemperatureColor,
+              valueColor: _colorForQuality('temperature', temp),
+              threshold: Settings.instance.temperatureThreshold,
+              onViewDetails: () {
+                navigateWithLoading(
+                  context,
+                  destination: QualityDetailPage(
+                    room: room,
+                    quality: 'Temperature',
+                    availableQualities: quals.toList(),
+                    roomIndex: _selectedRoomIndex,
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      } else {
+        cards.add(
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 6.0),
+            child: QualityCard(
+              qualityName: 'Temperature',
+              qualityIcon: Icons.thermostat,
+              qualityUnit: temperatureUnitLabel(),
+              qualityValue: '-',
+              cardColor: kTemperatureColor,
+              onViewDetails: () {
+                navigateWithLoading(
+                  context,
+                  destination: QualityDetailPage(
+                    room: room,
+                    quality: 'Temperature',
+                    hasDevices: false,
+                    availableQualities: quals.toList(),
+                  ),
+                );
+              },
+            ),
+          ),
+        );
+      }
+    }
+
+    return SizedBox(
+      height: 220,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          const SizedBox(width: 8),
+          ...cards,
+          const SizedBox(width: 8),
+        ],
+      ),
+    );
+  }
 }
 
 class RoomNavBar extends StatefulWidget {
@@ -1405,24 +1358,26 @@ class _RoomNavBarState extends State<RoomNavBar> {
     final bool selected = i == widget.selectedIndex;
     return GestureDetector(
       onTap: () => widget.onSelected?.call(i),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
         margin: const EdgeInsets.symmetric(horizontal: 4),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         decoration: BoxDecoration(
           color: selected ? _green : Colors.grey.shade100,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: selected ? _green : Colors.grey.shade300,
-            width: 1,
+            width: 1.5,
           ),
         ),
-        child: Text(
-          widget.rooms[i],
+        child: AnimatedDefaultTextStyle(
+          duration: const Duration(milliseconds: 250),
           style: TextStyle(
             fontSize: 13,
             fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
             color: selected ? Colors.white : _dark,
           ),
+          child: Text(widget.rooms[i]),
         ),
       ),
     );

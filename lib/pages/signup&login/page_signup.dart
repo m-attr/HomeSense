@@ -122,7 +122,37 @@ class _SignupPageState extends State<SignupPage>
     return Scaffold(
       body: Stack(
         children: [
-          Container(color: const Color(0xFF1EAA83)),
+          // Same background as welcome page
+          Container(
+            color: const Color(0xFF1EAA83),
+            width: double.infinity,
+            height: double.infinity,
+            child: Center(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Image.asset(
+                    'images/homesense-logo.png',
+                    height: 200,
+                    width: 400,
+                    fit: BoxFit.cover,
+                  ),
+                  const SizedBox(height: 40),
+                  SizedBox(
+                    height: 300,
+                    width: double.infinity,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        'images/welcome-banner.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
 
           Positioned(
             top: 40,

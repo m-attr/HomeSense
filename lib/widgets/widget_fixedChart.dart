@@ -18,6 +18,12 @@ class RealTimeChart extends StatefulWidget {
   /// When provided the chart will convert all data points & Y-axis labels.
   final double Function(double)? convertValue;
 
+  /// Fraction of the data range to extend below the minimum value.
+  /// 0.0 = Y-axis starts at data min (default for summary charts).
+  /// e.g. 0.6 = Y-axis min is pushed down by 60% of the range,
+  /// making the lowest point sit around 2/5 up from the bottom.
+  final double floorFraction;
+
   const RealTimeChart({
     super.key,
     required this.label,
@@ -29,6 +35,7 @@ class RealTimeChart extends StatefulWidget {
     this.yearLabels,
     this.showPeriodSelector = true,
     this.convertValue,
+    this.floorFraction = 0.0,
   });
 
   @override
@@ -238,7 +245,7 @@ class _RealTimeChartState extends State<RealTimeChart>
                               padding: const EdgeInsets.all(3.0),
                               decoration: BoxDecoration(
                                 color: Colors.grey.shade100,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(12),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -327,6 +334,7 @@ class _RealTimeChartState extends State<RealTimeChart>
                                     t: _morphAnim?.value ?? 1.0,
                                     unitLabel: unitLabel,
                                     convertValue: convert,
+                                    floorFraction: widget.floorFraction,
                                   ),
                                 ),
                               );
@@ -357,7 +365,7 @@ class _RealTimeChartState extends State<RealTimeChart>
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
         decoration: BoxDecoration(
           color: isActive ? green : Colors.transparent,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
           label,
@@ -381,6 +389,7 @@ class _CubicLineChartPainter extends CustomPainter {
   final double t; // 0 = show oldData, 1 = show newData
   final String unitLabel;
   final double Function(double)? convertValue;
+  final double floorFraction;
 
   _CubicLineChartPainter({
     required this.oldData,
@@ -388,6 +397,7 @@ class _CubicLineChartPainter extends CustomPainter {
     required this.t,
     required this.unitLabel,
     this.convertValue,
+    this.floorFraction = 0.0,
   });
 
   /// Resample [src] to [count] points using linear interpolation so that
@@ -432,9 +442,13 @@ class _CubicLineChartPainter extends CustomPainter {
     final chartH = size.height - top - bottom;
     if (chartW <= 0 || chartH <= 0) return;
 
-    final double minVal = data.reduce((a, b) => a < b ? a : b);
+    final double dataMin = data.reduce((a, b) => a < b ? a : b);
     final double maxVal = data.reduce((a, b) => a > b ? a : b);
-    final double range = (maxVal - minVal) == 0 ? 1.0 : (maxVal - minVal);
+    final double dataRange = (maxVal - dataMin) == 0 ? 1.0 : (maxVal - dataMin);
+    // Push the displayed minimum below the data minimum so the
+    // lowest point doesn't sit at the very bottom of the chart.
+    final double minVal = dataMin - dataRange * floorFraction;
+    final double range = maxVal - minVal;
 
     // Y-axis grid labels
     const int gridLines = 4;
@@ -564,6 +578,7 @@ class _CubicLineChartPainter extends CustomPainter {
     return oldDelegate.t != t ||
         oldDelegate.unitLabel != unitLabel ||
         oldDelegate.convertValue != convertValue ||
+        oldDelegate.floorFraction != floorFraction ||
         !identical(oldDelegate.oldData, oldData) ||
         !identical(oldDelegate.newData, newData);
   }

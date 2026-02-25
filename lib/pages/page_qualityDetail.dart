@@ -201,12 +201,27 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
     }
   }
 
-  /// Returns today-chart data for the given quality
+  /// Returns today-chart data for the given quality.
+  /// The last data point is set to the quality's current value so that
+  /// the rightmost point matches the value shown in the quality widget.
   List<double> _todayChartData(String q) {
     final l = q.toLowerCase();
-    if (l.contains('electric')) return _elecTodayData();
-    if (l.contains('water')) return _waterTodayData();
-    return _tempTodayData();
+    List<double> hourly;
+    double currentVal;
+    if (l.contains('electric')) {
+      hourly = _elecTodayData();
+      currentVal = _rd.electricity;
+    } else if (l.contains('water')) {
+      hourly = _waterTodayData();
+      currentVal = _rd.water;
+    } else {
+      hourly = _tempTodayData();
+      currentVal = _rd.temperature;
+    }
+    if (hourly.isEmpty) return hourly;
+    final result = List<double>.from(hourly);
+    result[result.length - 1] = currentVal;
+    return result;
   }
 
   /// Returns the unit-conversion function for a quality so the chart
@@ -475,6 +490,7 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
                                   weekData: _todayChartData(quality),
                                   weekLabels: _todayLabels(),
                                   convertValue: _converterFor(quality),
+                                  floorFraction: 0.6,
                                 ),
                               ),
                             ),
