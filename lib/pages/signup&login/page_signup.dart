@@ -149,11 +149,11 @@ class _SignupPageState extends State<SignupPage>
             bottom: 0,
             left: 0,
             right: 0,
-            height: MediaQuery.of(context).size.height * 0.7,
+            height: MediaQuery.of(context).size.height * 0.62,
             child: SlideTransition(
               position: _slideAnimation,
               child: Container(
-                padding: const EdgeInsets.fromLTRB(25.0, 40.0, 25.0, 20.0),
+                padding: const EdgeInsets.fromLTRB(32.0, 40.0, 32.0, 20.0),
                 decoration: const BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.only(
@@ -225,10 +225,18 @@ class _SignupPageState extends State<SignupPage>
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF1EAA83),
                         minimumSize: const Size(double.infinity, 50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        elevation: 0,
                       ),
                       child: const Text(
                         'Sign Up',
-                        style: TextStyle(color: Colors.white),
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
 

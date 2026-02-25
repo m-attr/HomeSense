@@ -56,7 +56,22 @@ class RoomData {
 //  PRESET ROOMS with realistic data
 // ════════════════════════════════════════════════════════════════════════════
 
-final List<RoomData> presetRooms = [
+/// Whether a room has any sensor data (hourly, weekly, etc.).
+bool roomHasData(RoomData r) {
+  return r.elecHourly.isNotEmpty ||
+      r.waterHourly.isNotEmpty ||
+      r.tempHourly.isNotEmpty ||
+      r.elecWeek.isNotEmpty ||
+      r.waterWeek.isNotEmpty ||
+      r.tempWeek.isNotEmpty;
+}
+
+/// Add a user-created room. It will appear across all pages.
+void addRoom(RoomData room) => allRooms.add(room);
+
+/// Master room list — includes presets plus user-added rooms.
+final List<RoomData> allRooms = [
+  // ══════ Preset rooms below ══════
   // ── Living Room ──────────────────────────────────────────────────────
   // Monitors: Electricity + Temperature
   // Typical living room: TV, lights, AC/heater, charging devices
@@ -308,3 +323,6 @@ final List<RoomData> presetRooms = [
     ],
   ),
 ];
+
+/// Legacy alias so existing code that reads presetRooms still compiles.
+List<RoomData> get presetRooms => allRooms;

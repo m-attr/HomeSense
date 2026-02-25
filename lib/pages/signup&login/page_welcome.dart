@@ -14,12 +14,17 @@ class WelcomePage extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
+            Image.asset('images/homesense-logo.png', height: 200, width: 400, fit: BoxFit.cover,),
+            const SizedBox(height: 40),
             SizedBox(
-              height: 220,
-              width: MediaQuery.of(context).size.width * 0.9,
+              height: 300,
+              width: double.infinity,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.asset('images/welcome-banner.png', fit: BoxFit.cover),
+                child: Image.asset(
+                  'images/welcome-banner.png',
+                  fit: BoxFit.cover,
+                ),
               ),
             ),
 
@@ -34,10 +39,22 @@ class WelcomePage extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      onPressed: () => navigateWithLoading(context, destination: LoginPage()),
-                      child: const Text('Log In', style: TextStyle(color: Color(0xFF1EAA83), fontSize: 18, fontWeight: FontWeight.bold)),
+                      onPressed: () => navigateWithLoading(
+                        context,
+                        destination: LoginPage(),
+                      ),
+                      child: const Text(
+                        'Log In',
+                        style: TextStyle(
+                          color: Color(0xFF1EAA83),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -46,10 +63,22 @@ class WelcomePage extends StatelessWidget {
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
-                      onPressed: () => navigateWithLoading(context, destination: SignupPage()),
-                      child: const Text('Sign Up', style: TextStyle(color: Color(0xFF1EAA83), fontSize: 18, fontWeight: FontWeight.bold)),
+                      onPressed: () => navigateWithLoading(
+                        context,
+                        destination: SignupPage(),
+                      ),
+                      child: const Text(
+                        'Sign Up',
+                        style: TextStyle(
+                          color: Color(0xFF1EAA83),
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                     ),
                   ),
                 ],

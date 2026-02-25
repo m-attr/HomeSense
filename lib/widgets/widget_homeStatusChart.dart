@@ -42,7 +42,7 @@ class _HomeStatusChartState extends State<HomeStatusChart>
     super.initState();
     _bgController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
+      duration: const Duration(milliseconds: 450),
     );
     _bgAnimation = Tween<double>(begin: 0.0, end: _kSweepArc).animate(
       CurvedAnimation(parent: _bgController, curve: Curves.easeOutCubic),
@@ -50,7 +50,7 @@ class _HomeStatusChartState extends State<HomeStatusChart>
 
     _yellowController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 900),
+      duration: const Duration(milliseconds: 600),
     );
     _yellowAnimation = Tween<double>(begin: 0.0, end: 0.0).animate(
       CurvedAnimation(parent: _yellowController, curve: Curves.easeOutCubic),
@@ -67,7 +67,7 @@ class _HomeStatusChartState extends State<HomeStatusChart>
     // when bg completes, wait 500ms then start yellow
     _bgController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
-        Future.delayed(const Duration(milliseconds: 500), () {
+        Future.delayed(const Duration(milliseconds: 200), () {
           final double targetSweep =
               (widget.score.clamp(0, 100) / 100.0) * _kSweepArc;
           _yellowAnimation = Tween<double>(

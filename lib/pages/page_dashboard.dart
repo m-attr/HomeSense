@@ -22,6 +22,8 @@ class DashboardPage extends StatefulWidget {
 }
 
 class _DashboardPageState extends State<DashboardPage> {
+  static bool _welcomeShownThisSession = false;
+
   int _selectedRoomIndex = 0;
   bool _showWelcomeBanner = false;
   Timer? _welcomeTimer;
@@ -78,11 +80,8 @@ class _DashboardPageState extends State<DashboardPage> {
     return 'Your home environment requires immediate attention. Multiple readings are outside safe or comfortable ranges. Please review device status and environmental conditions urgently.';
   }
 
-  // Rooms list backed by preset data (can be extended dynamically)
-  final List<String> _rooms = presetRooms.map((r) => r.name).toList();
-  final List<Set<String>> _roomQualities = presetRooms
-      .map((r) => r.qualities)
-      .toList();
+  // Rooms list — always reflects the global allRooms (includes user-created)
+  List<String> get _rooms => allRooms.map((r) => r.name).toList();
 
   /// Colour based on unified quality thresholds.
   /// [quality] is 'electricity', 'water', or 'temperature'.
@@ -119,9 +118,9 @@ class _DashboardPageState extends State<DashboardPage> {
     return '${days[now.weekday - 1]}, ${now.day} ${months[now.month - 1]} ${now.year}';
   }
 
-  /// Get room data for the selected index (null if custom room with no data)
+  /// Get room data for the selected index
   RoomData? _roomDataAt(int idx) {
-    if (idx < presetRooms.length) return presetRooms[idx];
+    if (idx >= 0 && idx < allRooms.length) return allRooms[idx];
     return null;
   }
 
@@ -148,6 +147,7 @@ class _DashboardPageState extends State<DashboardPage> {
         );
       },
       pageBuilder: (ctx, a1, a2) {
+        String? nameError;
         return StatefulBuilder(
           builder: (ctx, setDialogState) {
             return Center(
@@ -208,6 +208,11 @@ class _DashboardPageState extends State<DashboardPage> {
                       const SizedBox(height: 6),
                       TextField(
                         controller: nameCtrl,
+                        onChanged: (_) {
+                          if (nameError != null) {
+                            setDialogState(() => nameError = null);
+                          }
+                        },
                         decoration: InputDecoration(
                           hintText: 'e.g. Living Room',
                           contentPadding: const EdgeInsets.symmetric(
@@ -223,6 +228,25 @@ class _DashboardPageState extends State<DashboardPage> {
                               color: Color(0xFF1EAA83),
                               width: 2,
                             ),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: Colors.redAccent,
+                              width: 1.5,
+                            ),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(10),
+                            borderSide: const BorderSide(
+                              color: Colors.redAccent,
+                              width: 2,
+                            ),
+                          ),
+                          errorText: nameError,
+                          errorStyle: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ),
@@ -318,41 +342,42 @@ class _DashboardPageState extends State<DashboardPage> {
 
                       const SizedBox(height: 16),
 
-                      // Save button bottom-right
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.end,
-                        children: [
-                          ElevatedButton(
-                            onPressed: () {
-                              final name = nameCtrl.text.trim();
-                              if (name.isEmpty) return;
-                              Navigator.pop(ctx, {
-                                'name': name,
-                                'qualities': Set<String>.from(
-                                  selectedQualities,
-                                ),
+                      // Save button
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: () {
+                            final name = nameCtrl.text.trim();
+                            if (name.isEmpty) {
+                              setDialogState(() {
+                                nameError = 'Please enter a room name';
                               });
-                            },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: const Color(0xFF1EAA83),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 28,
-                                vertical: 12,
+                              return;
+                            }
+                            Navigator.pop(ctx, {
+                              'name': name,
+                              'qualities': Set<String>.from(
+                                selectedQualities,
                               ),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(10),
-                              ),
+                            });
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF1EAA83),
+                            minimumSize: const Size(double.infinity, 50),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Text(
-                              'Save',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 15,
-                                fontWeight: FontWeight.w600,
-                              ),
+                            elevation: 0,
+                          ),
+                          child: const Text(
+                            'Save',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
-                        ],
+                        ),
                       ),
                     ],
                   ),
@@ -368,10 +393,8 @@ class _DashboardPageState extends State<DashboardPage> {
       final name = data['name'] as String;
       final qualities = data['qualities'] as Set<String>;
       setState(() {
-        _rooms.add(name);
-        _roomQualities.add(qualities);
-        // New rooms have no sample data — they'll show the empty state
-        _selectedRoomIndex = _rooms.length - 1;
+        addRoom(RoomData(name: name, qualities: qualities));
+        _selectedRoomIndex = allRooms.length - 1;
       });
     });
   }
@@ -494,6 +517,7 @@ class _DashboardPageState extends State<DashboardPage> {
           final repo = UserRepository.instance;
           repo.currentUser = null;
           repo.setLastLoggedInEmail(null);
+          _welcomeShownThisSession = false; // reset so next login shows banner
           navigateWithLoading(
             context,
             destination: const WelcomePage(),
@@ -728,8 +752,9 @@ class _DashboardPageState extends State<DashboardPage> {
                                   setState(() => _selectedRoomIndex = i),
                             ),
                             const SizedBox(height: 12),
-                            // If this room has no preset data, show cards with '-' for selected qualities
-                            if (_selectedRoomIndex >= presetRooms.length)
+                            // If this room has no data, show cards with '-' for selected qualities
+                            if (_roomDataAt(_selectedRoomIndex) == null ||
+                                !roomHasData(_roomDataAt(_selectedRoomIndex)!))
                               SizedBox(
                                 height: 220,
                                 child: ListView(
@@ -737,16 +762,11 @@ class _DashboardPageState extends State<DashboardPage> {
                                   children: [
                                     const SizedBox(width: 8),
                                     ...(() {
-                                      final quals =
-                                          _selectedRoomIndex <
-                                              _roomQualities.length
-                                          ? _roomQualities[_selectedRoomIndex]
-                                          : <String>{};
-                                      final room =
-                                          _rooms[_selectedRoomIndex.clamp(
-                                            0,
-                                            _rooms.length - 1,
-                                          )];
+                                      final rd = _roomDataAt(
+                                        _selectedRoomIndex,
+                                      );
+                                      final quals = rd?.qualities ?? <String>{};
+                                      final room = rd?.name ?? 'Room';
                                       final List<Widget> cards = [];
                                       if (quals.contains('Electricity')) {
                                         cards.add(
@@ -986,10 +1006,7 @@ class _DashboardPageState extends State<DashboardPage> {
                                     color: Color(0xFF1EAA83),
                                     width: 1.5,
                                   ),
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 16,
-                                    horizontal: 16,
-                                  ),
+                                  minimumSize: const Size(double.infinity, 50),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
@@ -1294,10 +1311,10 @@ class _DashboardPageState extends State<DashboardPage> {
   @override
   void initState() {
     super.initState();
-    // show welcome banner briefly if a user is already logged in
+    // show welcome banner only on the very first dashboard visit this session
     final repo = UserRepository.instance;
-    if (repo.currentUser != null) {
-      // schedule showing shortly after build
+    if (repo.currentUser != null && !_welcomeShownThisSession) {
+      _welcomeShownThisSession = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         setState(() => _showWelcomeBanner = true);

@@ -197,8 +197,8 @@ class _AboutPageState extends State<AboutPage> {
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(
                         'images/about-banner.png',
+                        height: 320,
                         width: double.infinity,
-                        height: 180,
                         fit: BoxFit.cover,
                       ),
                     ),

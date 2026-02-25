@@ -14,6 +14,10 @@ class RealTimeChart extends StatefulWidget {
   final List<String>? yearLabels;
   final bool showPeriodSelector;
 
+  /// Optional function to convert a base-unit value to the current display unit.
+  /// When provided the chart will convert all data points & Y-axis labels.
+  final double Function(double)? convertValue;
+
   const RealTimeChart({
     super.key,
     required this.label,
@@ -24,6 +28,7 @@ class RealTimeChart extends StatefulWidget {
     this.monthLabels,
     this.yearLabels,
     this.showPeriodSelector = true,
+    this.convertValue,
   });
 
   @override
@@ -180,6 +185,7 @@ class _RealTimeChartState extends State<RealTimeChart>
             ? _weekLabels
             : (_period == ChartPeriod.month ? _monthLabels : _yearLabels);
         final unitLabel = _unitForLabel(widget.label);
+        final convert = widget.convertValue;
 
         debugPrint(
           'RealTimeChart.build: label=${widget.label} period=$_period '
@@ -202,6 +208,27 @@ class _RealTimeChartState extends State<RealTimeChart>
                       color: Colors.white,
                       child: Row(
                         children: [
+                          Padding(
+                            padding: const EdgeInsets.only(left: 8.0),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.grey.shade100,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                unitLabel,
+                                style: TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.grey.shade700,
+                                ),
+                              ),
+                            ),
+                          ),
                           const Expanded(child: SizedBox.shrink()),
                           Padding(
                             padding: const EdgeInsets.symmetric(
@@ -229,7 +256,33 @@ class _RealTimeChartState extends State<RealTimeChart>
                       ),
                     )
                   else
-                    SizedBox(height: headerH),
+                    SizedBox(
+                      height: headerH,
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: Padding(
+                          padding: const EdgeInsets.only(left: 8.0),
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 3,
+                            ),
+                            decoration: BoxDecoration(
+                              color: Colors.grey.shade100,
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              unitLabel,
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade700,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
                   const SizedBox(height: spacing),
                   SizedBox(
                     height: chartH,
@@ -273,6 +326,7 @@ class _RealTimeChartState extends State<RealTimeChart>
                                     newData: _newData,
                                     t: _morphAnim?.value ?? 1.0,
                                     unitLabel: unitLabel,
+                                    convertValue: convert,
                                   ),
                                 ),
                               );
@@ -326,12 +380,14 @@ class _CubicLineChartPainter extends CustomPainter {
   final List<double> newData;
   final double t; // 0 = show oldData, 1 = show newData
   final String unitLabel;
+  final double Function(double)? convertValue;
 
   _CubicLineChartPainter({
     required this.oldData,
     required this.newData,
     required this.t,
     required this.unitLabel,
+    this.convertValue,
   });
 
   /// Resample [src] to [count] points using linear interpolation so that
@@ -362,10 +418,14 @@ class _CubicLineChartPainter extends CustomPainter {
     final sampledNew = _resample(newData, morphCount);
 
     // Lerp each value
-    final List<double> data = List.generate(
+    final List<double> rawData = List.generate(
       morphCount,
       (i) => sampledOld[i] + (sampledNew[i] - sampledOld[i]) * t,
     );
+
+    // Convert to display units if a converter is provided
+    final conv = convertValue ?? (v) => v;
+    final List<double> data = rawData.map((v) => conv(v)).toList();
 
     const double left = 8.0, right = 8.0, top = 6.0, bottom = 6.0;
     final chartW = size.width - left - right;
@@ -385,9 +445,13 @@ class _CubicLineChartPainter extends CustomPainter {
     for (int i = 0; i <= gridLines; i++) {
       final double y = top + chartH * (i / gridLines);
       final double value = maxVal - (i / gridLines) * range;
+      // Smart label: values >= 10 → integer, otherwise 1 decimal
+      final String label = value >= 10
+          ? value.toStringAsFixed(0)
+          : value.toStringAsFixed(1);
       final tp = TextPainter(
         text: TextSpan(
-          text: value.toStringAsFixed(0),
+          text: label,
           style: const TextStyle(
             fontSize: 10,
             color: Colors.black,
@@ -449,17 +513,6 @@ class _CubicLineChartPainter extends CustomPainter {
     canvas.drawPath(fillPath, fillPaint);
     canvas.drawPath(path, linePaint);
 
-    // X-axis line
-    final axisPaint = Paint()
-      ..color = Colors.grey.withAlpha((0.65 * 255).round())
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
-    canvas.drawLine(
-      Offset(startX2, top + chartH),
-      Offset(endX2, top + chartH),
-      axisPaint,
-    );
-
     // Optional debug markers
     if (_kVisualDebug && points.length >= 2) {
       canvas.drawCircle(
@@ -510,6 +563,7 @@ class _CubicLineChartPainter extends CustomPainter {
   bool shouldRepaint(covariant _CubicLineChartPainter oldDelegate) {
     return oldDelegate.t != t ||
         oldDelegate.unitLabel != unitLabel ||
+        oldDelegate.convertValue != convertValue ||
         !identical(oldDelegate.oldData, oldData) ||
         !identical(oldDelegate.newData, newData);
   }

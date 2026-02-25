@@ -50,9 +50,11 @@ class WidgetMenuDrawer extends StatelessWidget {
                         child: CircleAvatar(
                           radius: 36,
                           backgroundColor: Colors.white,
-                          child: CircleAvatar(
-                            radius: 34,
-                            backgroundImage: imageProvider,
+                          child: ClipOval(
+                            child: CircleAvatar(
+                              radius: 34,
+                              backgroundImage: imageProvider,
+                            ),
                           ),
                         ),
                       ),
@@ -131,7 +133,9 @@ class WidgetMenuDrawer extends StatelessWidget {
             padding: const EdgeInsets.only(right: 12.0, bottom: 12.0),
             child: Align(
               alignment: Alignment.centerRight,
-              child: Image.asset('images/homesense-logo.png', width: 56, height: 56),
+              child: ClipOval(
+                child: Image.asset('images/homesense-logo.png', width: 56, height: 56, fit: BoxFit.cover),
+              ),
             ),
           ),
         ],

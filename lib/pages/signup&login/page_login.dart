@@ -119,13 +119,13 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
             bottom: 0,
             left: 0,
             right: 0,
-            height: MediaQuery.of(context).size.height * 0.7,
+            height: MediaQuery.of(context).size.height * 0.78,
             child: SlideTransition(
               position: _swipeAnimation,
               child: SlideTransition(
                 position: _slideAnimation,
                 child: Container(
-                  padding: const EdgeInsets.fromLTRB(25.0, 40.0, 25.0, 20.0),
+                  padding: const EdgeInsets.fromLTRB(32.0, 40.0, 32.0, 20.0),
                   decoration: const BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.only(
@@ -239,10 +239,18 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFF1EAA83),
                           minimumSize: const Size(double.infinity, 50),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 0,
                         ),
                         child: const Text(
                           'Log in',
-                          style: TextStyle(color: Colors.white),
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
 
@@ -288,8 +296,8 @@ class _LoginPageState extends State<LoginPage> with TickerProviderStateMixin {
           if (_showCreatedBanner)
             Positioned(
               top: _bannerTop,
-              left: 16,
-              right: 16,
+              left: 32,
+              right: 32,
               child: Material(
                 color: Colors.transparent,
                 child: Container(

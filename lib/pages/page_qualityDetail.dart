@@ -29,16 +29,63 @@ class QualityDetailPage extends StatefulWidget {
   State<QualityDetailPage> createState() => _QualityDetailPageState();
 }
 
+class _DeviceInfo {
+  final String name;
+  final double value; // watts / flow / temp
+  _DeviceInfo({required this.name, required this.value});
+}
+
 class _QualityDetailPageState extends State<QualityDetailPage> {
   late String _activeQuality;
 
   /// Track direction: 1 = slide in from right, -1 = slide in from left
   int _slideDirection = 1;
 
+  /// Mutable device lists per quality — supports disconnect (removal)
+  late Map<String, List<_DeviceInfo>> _deviceMap;
+
   @override
   void initState() {
     super.initState();
     _activeQuality = widget.quality;
+    _deviceMap = _buildInitialDevices();
+  }
+
+  Map<String, List<_DeviceInfo>> _buildInitialDevices() {
+    final int ri = widget.roomIndex;
+
+    const elecNames = [
+      ['LED Ceiling Light', 'Smart TV', 'Floor Lamp'],
+      ['Refrigerator', 'Microwave Oven', 'Dishwasher'],
+      ['Bedside Lamp', 'Phone Charger', 'Ceiling Fan'],
+    ];
+    const waterNames = [
+      ['Kitchen Tap', 'Dishwasher Inlet', 'Ice Maker'],
+    ];
+    const tempNames = [
+      ['Smart AC', 'Air Purifier', 'Thermostat'],
+      ['Range Hood', 'Kitchen Vent', 'Wall Sensor'],
+      ['Bedroom AC', 'Smart Fan', 'Sleep Sensor'],
+    ];
+
+    final eNames = ri < elecNames.length ? elecNames[ri] : elecNames[0];
+    final wNames = waterNames[0];
+    final tNames = ri < tempNames.length ? tempNames[ri] : tempNames[0];
+
+    return {
+      'electricity': List.generate(3, (i) =>
+          _DeviceInfo(name: eNames[i], value: 400.0 + i * 150)),
+      'water': List.generate(3, (i) =>
+          _DeviceInfo(name: wNames[i], value: 3.0 + i * 1.5)),
+      'temperature': List.generate(3, (i) =>
+          _DeviceInfo(name: tNames[i], value: 20.0 + i)),
+    };
+  }
+
+  void _removeDevice(String qualityKey, int index) {
+    setState(() {
+      _deviceMap[qualityKey]?.removeAt(index);
+    });
   }
 
   void _switchQuality(String next) {
@@ -162,6 +209,15 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
     return _tempTodayData();
   }
 
+  /// Returns the unit-conversion function for a quality so the chart
+  /// can convert base-unit data (kWh / L / °C) to the current display unit.
+  double Function(double) _converterFor(String q) {
+    final l = q.toLowerCase();
+    if (l.contains('electric')) return convertElectricity;
+    if (l.contains('water')) return convertWater;
+    return convertTemperature;
+  }
+
   List<Widget> _buildQualityNavButtons() {
     final qualities = widget.availableQualities;
     final List<Widget> buttons = [];
@@ -187,54 +243,46 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
     final String room = widget.room;
     final String quality = _activeQuality;
 
-    // prebuild device cards list with realistic names per room
+    // Build device card widgets from mutable _deviceMap
     final String ql = quality.toLowerCase();
-    final int ri = widget.roomIndex;
+    String qualityKey;
+    if (ql.contains('electric')) {
+      qualityKey = 'electricity';
+    } else if (ql.contains('water')) {
+      qualityKey = 'water';
+    } else {
+      qualityKey = 'temperature';
+    }
+    final devices = _deviceMap[qualityKey] ?? [];
 
-    // Realistic device names per room per quality
-    const elecDevices = [
-      ['LED Ceiling Light', 'Smart TV', 'Floor Lamp'], // Living Room
-      ['Refrigerator', 'Microwave Oven', 'Dishwasher'], // Kitchen
-      ['Bedside Lamp', 'Phone Charger', 'Ceiling Fan'], // Bedroom
-    ];
-    const waterDevices = [
-      ['Kitchen Tap', 'Dishwasher Inlet', 'Ice Maker'], // Kitchen only
-    ];
-    const tempDevices = [
-      ['Smart AC', 'Air Purifier', 'Thermostat'], // Living Room
-      ['Range Hood', 'Kitchen Vent', 'Wall Sensor'], // Kitchen
-      ['Bedroom AC', 'Smart Fan', 'Sleep Sensor'], // Bedroom
-    ];
-
-    final List<Widget> deviceWidgets = List<Widget>.generate(3, (i) {
-      if (ql.contains('electric')) {
-        final names = ri < elecDevices.length
-            ? elecDevices[ri]
-            : elecDevices[0];
+    final List<Widget> deviceWidgets = List.generate(devices.length, (i) {
+      final d = devices[i];
+      if (qualityKey == 'electricity') {
         return _ElecDeviceCard(
-          deviceName: names[i],
+          key: ValueKey('elec_${d.name}'),
+          deviceName: d.name,
           deviceCountText: '${(i % 3) + 1} devices',
-          currentWatts: (400.0 + i * 150),
+          currentWatts: d.value,
           unit: electricityUnitLabel(),
+          onDisconnect: () => _removeDevice(qualityKey, i),
         );
-      } else if (ql.contains('water')) {
-        // Only Kitchen (index 1) has water; fallback to first list
-        final names = waterDevices[0];
+      } else if (qualityKey == 'water') {
         return _WaterDeviceCard(
-          deviceName: names[i],
+          key: ValueKey('water_${d.name}'),
+          deviceName: d.name,
           deviceCountText: '${(i % 3) + 1} devices',
-          currentFlow: (3.0 + i * 1.5),
+          currentFlow: d.value,
           unit: waterUnitLabel(),
+          onDisconnect: () => _removeDevice(qualityKey, i),
         );
       } else {
-        final names = ri < tempDevices.length
-            ? tempDevices[ri]
-            : tempDevices[0];
         return _TempDeviceCard(
-          deviceName: names[i],
+          key: ValueKey('temp_${d.name}'),
+          deviceName: d.name,
           deviceCountText: '${(i % 3) + 1} devices',
-          currentTemp: (20.0 + i),
+          currentTemp: d.value,
           unit: temperatureUnitLabel(),
+          onDisconnect: () => _removeDevice(qualityKey, i),
         );
       }
     });
@@ -324,116 +372,121 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
                 children: [
                   const SizedBox(height: 16),
 
-                  // Section 1: Period chart (consumption / reading over time)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          const Padding(
-                            padding: EdgeInsets.fromLTRB(16, 14, 16, 0),
-                            child: Text(
-                              'Summary',
-                              style: TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2D3142),
+                  // ── Charts only when the room has devices / data ──
+                  if (widget.hasDevices) ...[
+                    // Section 1: Period chart (consumption / reading over time)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.fromLTRB(16, 14, 16, 0),
+                              child: Text(
+                                'Summary',
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2D3142),
+                                ),
                               ),
                             ),
-                          ),
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              bottomLeft: Radius.circular(16),
-                              bottomRight: Radius.circular(16),
-                            ),
-                            child: SizedBox(
-                              height: 260,
-                              child: Builder(
-                                builder: (_) {
-                                  final d = _periodChartData(quality);
-                                  return RealTimeChart(
-                                    label: quality,
-                                    weekData: d['week'] as List<double>,
-                                    monthData: d['month'] as List<double>,
-                                    yearData: d['year'] as List<double>,
-                                  );
-                                },
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(16),
+                                bottomRight: Radius.circular(16),
+                              ),
+                              child: SizedBox(
+                                height: 260,
+                                child: Builder(
+                                  builder: (_) {
+                                    final d = _periodChartData(quality);
+                                    return RealTimeChart(
+                                      label: quality,
+                                      weekData: d['week'] as List<double>,
+                                      monthData: d['month'] as List<double>,
+                                      yearData: d['year'] as List<double>,
+                                      convertValue: _converterFor(quality),
+                                    );
+                                  },
+                                ),
                               ),
                             ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  const SizedBox(height: 16),
-
-                  // Section 1b: Today chart (hourly curve, no radio buttons)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Container(
-                      width: double.infinity,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(16),
-                        boxShadow: const [
-                          BoxShadow(
-                            color: Colors.black12,
-                            blurRadius: 6,
-                            offset: Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                            child: Text(
-                              'Today',
-                              style: const TextStyle(
-                                fontSize: 15,
-                                fontWeight: FontWeight.bold,
-                                color: Color(0xFF2D3142),
-                              ),
-                            ),
-                          ),
-                          ClipRRect(
-                            borderRadius: const BorderRadius.only(
-                              bottomLeft: Radius.circular(16),
-                              bottomRight: Radius.circular(16),
-                            ),
-                            child: SizedBox(
-                              height: 220,
-                              child: RealTimeChart(
-                                label: quality,
-                                showPeriodSelector: false,
-                                weekData: _todayChartData(quality),
-                                weekLabels: _todayLabels(),
-                              ),
-                            ),
-                          ),
-                        ],
+                          ],
+                        ),
                       ),
                     ),
-                  ),
 
-                  const SizedBox(height: 16),
+                    const SizedBox(height: 16),
 
-                  // Section 2: Quality nav + indicator
+                    // Section 1b: Today chart (hourly curve, no radio buttons)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Container(
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
+                              child: Text(
+                                'Today',
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color(0xFF2D3142),
+                                ),
+                              ),
+                            ),
+                            ClipRRect(
+                              borderRadius: const BorderRadius.only(
+                                bottomLeft: Radius.circular(16),
+                                bottomRight: Radius.circular(16),
+                              ),
+                              child: SizedBox(
+                                height: 220,
+                                child: RealTimeChart(
+                                  label: quality,
+                                  showPeriodSelector: false,
+                                  weekData: _todayChartData(quality),
+                                  weekLabels: _todayLabels(),
+                                  convertValue: _converterFor(quality),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+                  ],
+
+                  // Section 2: Quality nav + indicator (always visible)
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16.0),
                     child: Container(
@@ -463,30 +516,110 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
 
                   const SizedBox(height: 16),
 
-                  // --- Sliding content area ---
-                  AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 350),
-                    switchInCurve: Curves.easeInOut,
-                    switchOutCurve: Curves.easeInOut,
-                    transitionBuilder: (child, animation) {
-                      final isIncoming = child.key == ValueKey(_activeQuality);
-                      final begin = isIncoming
-                          ? Offset(_slideDirection.toDouble(), 0.0)
-                          : Offset(-_slideDirection.toDouble(), 0.0);
-                      return SlideTransition(
-                        position: Tween<Offset>(
-                          begin: begin,
-                          end: Offset.zero,
-                        ).animate(animation),
-                        child: child,
-                      );
-                    },
-                    child: _buildContentForQuality(
-                      key: ValueKey(_activeQuality),
-                      quality: quality,
-                      deviceWidgets: deviceWidgets,
+                  // ── When no devices: show empty state instead of quality widget + device grid ──
+                  if (!widget.hasDevices) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 40,
+                          horizontal: 20,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Colors.black12,
+                              blurRadius: 6,
+                              offset: Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            Icon(
+                              Icons.bluetooth_disabled,
+                              size: 56,
+                              color: Colors.grey.shade300,
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              'No devices connected',
+                              style: TextStyle(
+                                fontSize: 17,
+                                fontWeight: FontWeight.w600,
+                                color: Colors.grey.shade500,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Text(
+                              'Add a device to start monitoring this room.',
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.grey.shade400,
+                              ),
+                            ),
+                            const SizedBox(height: 24),
+                            SizedBox(
+                              width: 220,
+                              child: ElevatedButton.icon(
+                                onPressed: () => _showAddDevicePopup(context),
+                                icon: const Icon(
+                                  Icons.add_circle_outline,
+                                  size: 20,
+                                ),
+                                label: const Text(
+                                  'Add Device',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF1EAA83),
+                                  foregroundColor: Colors.white,
+                                  minimumSize: const Size(0, 50),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                  elevation: 0,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
+                  ] else ...[
+                    // --- Sliding content area (quality section + devices) ---
+                    AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 350),
+                      switchInCurve: Curves.easeInOut,
+                      switchOutCurve: Curves.easeInOut,
+                      transitionBuilder: (child, animation) {
+                        final isIncoming =
+                            child.key == ValueKey(_activeQuality);
+                        final begin = isIncoming
+                            ? Offset(_slideDirection.toDouble(), 0.0)
+                            : Offset(-_slideDirection.toDouble(), 0.0);
+                        return SlideTransition(
+                          position: Tween<Offset>(
+                            begin: begin,
+                            end: Offset.zero,
+                          ).animate(animation),
+                          child: child,
+                        );
+                      },
+                      child: _buildContentForQuality(
+                        key: ValueKey(_activeQuality),
+                        quality: quality,
+                        deviceWidgets: deviceWidgets,
+                      ),
+                    ),
+                  ],
 
                   const SizedBox(height: 24),
                 ],
@@ -643,7 +776,7 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
           color: const Color(0xFFE8F5F0),
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: const Color(0xFF1EAA83).withOpacity(0.4),
+            color: const Color(0xFF1EAA83).withValues(alpha: 0.4),
             width: 1.5,
           ),
         ),
@@ -654,7 +787,7 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
               width: 44,
               height: 44,
               decoration: BoxDecoration(
-                color: const Color(0xFF1EAA83).withOpacity(0.12),
+                color: const Color(0xFF1EAA83).withValues(alpha: 0.12),
                 shape: BoxShape.circle,
               ),
               child: const Icon(
@@ -684,7 +817,7 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
       context: context,
       barrierDismissible: true,
       barrierLabel: 'Add Device',
-      barrierColor: Colors.black.withOpacity(0.5),
+      barrierColor: Colors.black.withValues(alpha: 0.5),
       transitionDuration: const Duration(milliseconds: 300),
       pageBuilder: (ctx, anim1, anim2) {
         return Center(
@@ -698,7 +831,7 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
                 borderRadius: BorderRadius.circular(20),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Colors.black.withValues(alpha: 0.15),
                     blurRadius: 24,
                     offset: const Offset(0, 8),
                   ),
@@ -733,7 +866,7 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
                     width: 80,
                     height: 80,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1EAA83).withOpacity(0.08),
+                      color: const Color(0xFF1EAA83).withValues(alpha: 0.08),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
@@ -768,7 +901,7 @@ class _QualityDetailPageState extends State<QualityDetailPage> {
                     child: LinearProgressIndicator(
                       backgroundColor: const Color(
                         0xFF1EAA83,
-                      ).withOpacity(0.12),
+                      ).withValues(alpha: 0.12),
                       valueColor: const AlwaysStoppedAnimation<Color>(
                         Color(0xFF1EAA83),
                       ),
@@ -858,12 +991,15 @@ class _TempDeviceCard extends StatefulWidget {
   final String deviceCountText;
   final double currentTemp;
   final String unit;
+  final VoidCallback? onDisconnect;
 
   const _TempDeviceCard({
+    super.key,
     required this.deviceName,
     required this.deviceCountText,
     required this.currentTemp,
     required this.unit,
+    this.onDisconnect,
   });
 
   @override
@@ -1002,7 +1138,7 @@ class _TempDeviceCardState extends State<_TempDeviceCard> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -1224,7 +1360,7 @@ class _TempDeviceCardState extends State<_TempDeviceCard> {
                       GestureDetector(
                         onTap: () {
                           Navigator.pop(ctx);
-                          // TODO: handle device removal
+                          widget.onDisconnect?.call();
                         },
                         child: Container(
                           width: double.infinity,
@@ -1351,12 +1487,15 @@ class _ElecDeviceCard extends StatefulWidget {
   final String deviceCountText;
   final double currentWatts;
   final String unit;
+  final VoidCallback? onDisconnect;
 
   const _ElecDeviceCard({
+    super.key,
     required this.deviceName,
     required this.deviceCountText,
     required this.currentWatts,
     required this.unit,
+    this.onDisconnect,
   });
 
   @override
@@ -1370,12 +1509,11 @@ class _ElecDeviceCardState extends State<_ElecDeviceCard> {
 
   // Mode presets (watts)
   static const List<double> _modePresets = [600.0, 1200.0, 2400.0];
-  static const double _defaultLimit = 1200.0;
 
   @override
   void initState() {
     super.initState();
-    _powerLimit = _defaultLimit;
+    _powerLimit = widget.currentWatts;
   }
 
   void _showElecPopup() {
@@ -1495,7 +1633,7 @@ class _ElecDeviceCardState extends State<_ElecDeviceCard> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -1632,7 +1770,7 @@ class _ElecDeviceCardState extends State<_ElecDeviceCard> {
                               setPopupState(() {
                                 if (popupMode == 0) {
                                   popupMode = 1;
-                                  limitVal = _defaultLimit;
+                                  limitVal = widget.currentWatts;
                                 } else {
                                   popupMode = 0;
                                   limitVal = _modePresets[0];
@@ -1653,7 +1791,7 @@ class _ElecDeviceCardState extends State<_ElecDeviceCard> {
                               setPopupState(() {
                                 if (popupMode == 1) {
                                   popupMode = 1;
-                                  limitVal = _defaultLimit;
+                                  limitVal = widget.currentWatts;
                                 } else {
                                   popupMode = 1;
                                   limitVal = _modePresets[1];
@@ -1674,7 +1812,7 @@ class _ElecDeviceCardState extends State<_ElecDeviceCard> {
                               setPopupState(() {
                                 if (popupMode == 2) {
                                   popupMode = 1;
-                                  limitVal = _defaultLimit;
+                                  limitVal = widget.currentWatts;
                                 } else {
                                   popupMode = 2;
                                   limitVal = _modePresets[2];
@@ -1715,7 +1853,10 @@ class _ElecDeviceCardState extends State<_ElecDeviceCard> {
 
                       // Disconnect
                       GestureDetector(
-                        onTap: () => Navigator.pop(ctx),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          widget.onDisconnect?.call();
+                        },
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -1810,7 +1951,7 @@ class _ElecDeviceCardState extends State<_ElecDeviceCard> {
               children: [
                 Expanded(
                   child: Text(
-                    widget.currentWatts.toStringAsFixed(0),
+                    _powerLimit.toStringAsFixed(0),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
@@ -1840,12 +1981,15 @@ class _WaterDeviceCard extends StatefulWidget {
   final String deviceCountText;
   final double currentFlow;
   final String unit;
+  final VoidCallback? onDisconnect;
 
   const _WaterDeviceCard({
+    super.key,
     required this.deviceName,
     required this.deviceCountText,
     required this.currentFlow,
     required this.unit,
+    this.onDisconnect,
   });
 
   @override
@@ -1857,12 +2001,10 @@ class _WaterDeviceCardState extends State<_WaterDeviceCard> {
   bool _leakProtection = true;
   bool _isPoweredOn = true;
 
-  static const double _defaultFlow = 8.0;
-
   @override
   void initState() {
     super.initState();
-    _flowLimit = _defaultFlow;
+    _flowLimit = widget.currentFlow;
   }
 
   void _showWaterPopup() {
@@ -1932,7 +2074,7 @@ class _WaterDeviceCardState extends State<_WaterDeviceCard> {
                     borderRadius: BorderRadius.circular(20),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.2),
+                        color: Colors.black.withValues(alpha: 0.2),
                         blurRadius: 20,
                         offset: const Offset(0, 8),
                       ),
@@ -2174,7 +2316,10 @@ class _WaterDeviceCardState extends State<_WaterDeviceCard> {
 
                       // Disconnect
                       GestureDetector(
-                        onTap: () => Navigator.pop(ctx),
+                        onTap: () {
+                          Navigator.pop(ctx);
+                          widget.onDisconnect?.call();
+                        },
                         child: Container(
                           width: double.infinity,
                           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -2269,7 +2414,7 @@ class _WaterDeviceCardState extends State<_WaterDeviceCard> {
               children: [
                 Expanded(
                   child: Text(
-                    widget.currentFlow.toStringAsFixed(1),
+                    _flowLimit.toStringAsFixed(1),
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,

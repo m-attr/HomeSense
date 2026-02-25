@@ -302,7 +302,10 @@ int computeHomeScore() {
   double totalScore = 0;
   int count = 0;
 
-  for (final room in presetRooms) {
+  for (final room in allRooms) {
+    // Skip rooms with no data (user-created, no devices connected yet)
+    if (!roomHasData(room)) continue;
+
     // Electricity
     if (room.qualities.contains('Electricity')) {
       totalScore += _consumptionScore(room.electricity, elecDaily);
